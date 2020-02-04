@@ -9,7 +9,7 @@ EXTERN_STDC_BEGIN
 
 typedef struct Transaction {
   ActionDesc* actions;
-  unsigned int num;
+  unsigned int actionNum;
 } Transaction;
 
 #define TRANSACTION_DEF(actions)\

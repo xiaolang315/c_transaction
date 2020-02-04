@@ -24,4 +24,4 @@ link_directories(
 )
 
 add_executable(c_transaction  ${all_files})
-target_link_libraries(c_transaction gtest pthread)
+target_link_libraries(c_transaction CppUTest CppUTestExt)

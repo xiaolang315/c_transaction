@@ -19,10 +19,12 @@ typedef struct ContextDesc {
 
 typedef struct ActionDesc {
     Action action;
-    int num;
+    int ctxtNum;
     ContextDesc* contexts;
 } ActionDesc;
 
 #define DEF_CTXT_DESC(name) ARRAY_SIZE(name), name
+
+#define DEF_ACTION_CTXT(name) {CTXT_ID(name), sizeof(name)}
 
 #endif // __ACTION_H_
