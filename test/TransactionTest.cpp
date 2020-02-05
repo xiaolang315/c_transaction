@@ -89,7 +89,7 @@ namespace {
         Transaction trans = TRANSACTION_DEF(actions);
         mock().expectOneCall("SimpleActionCheck").withParameter("x",  2);
         TransResult ret = exec(&trans);
-        CHECK_EQUAL(ret, Succ);
+        CHECK_EQUAL(ret, TransSucc);
         mock().checkExpectations();
     }
 
@@ -97,7 +97,7 @@ namespace {
         mock().expectNoCall("SimpleActionCheck");
         Transaction trans = TRANSACTION_DEF(actionsFail);
         TransResult ret = exec(&trans);
-        CHECK_EQUAL(ret, Fail);
+        CHECK_EQUAL(ret, TransFail);
         mock().checkExpectations();
     }
 
@@ -130,7 +130,7 @@ namespace {
         mock().expectOneCall("RollBackDemo").withParameter("x", Expect_X);
         Transaction trans = TRANSACTION_DEF(actionsRollBack);
         TransResult ret = exec(&trans);
-        CHECK_EQUAL(ret, Fail);
+        CHECK_EQUAL(ret, TransFail);
         mock().checkExpectations();
     }
 

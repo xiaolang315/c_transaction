@@ -4,16 +4,79 @@
 #include "Context.h"
 #include "memory.h"
 #include "stdlib.h"
+#include "BaseType.h"
+#include "Foreach.h"
+#include "Action.h"
 
-void AddRollBack(RollbackContext* context, RollBackAction action, const RollbackData* data){
+static int getOffSet(const ContextMap* map,  int id){
+    for( unsigned int i =0; i< map->hashNum; i++ ) {
+        if(id == map->hash[i].id) return map->hash[i].offset;
+    }
+    return -1;
+}
+
+static void* castTo(const ContextMap* map, void* data, int id){
+    return data + getOffSet(map, id);
+}
+
+static void insertHash(ContextMap* map, int offset, int id){
+    map->hash[map->hashNum].id = id;
+    map->hash[map->hashNum].offset = offset;
+    map->hashNum ++;
+}
+
+static void getLength(ContextMap* map, int* length, ContextDesc* context){
+    int offSet = getOffSet(map, context->id);
+    if(offSet == -1) {
+        insertHash(map, *length, context->id);
+        *length += context->size;
+    }
+}
+
+BOOL AddRollBack(RollbackContext* context, RollBackAction action, const RollbackData* data){
     context->contexts[context->num].action = action;
 
     RollbackData* toData = &context->contexts[context->num].data;
 
     toData->mem = malloc(data->len);
-    if(toData->mem == NULL) return;
+    if(toData->mem == NULL) return FALSE;
 
     memcpy(toData->mem, data->mem, data->len);
     toData->len = data->len;
     context->num++;
+    return TRUE;
+}
+
+static int initLength(ContextMap* map, ActionDesc* actions, int actionNum) {
+    int length = 0;
+    map->hashNum = 0;
+
+    map->hash = malloc(actionNum * sizeof(ContextSet));
+    if(map->hash == NULL) return 0;
+
+    FOREACH(ActionDesc, action, actions, actionNum)
+        FOREACH(ContextDesc, context, action->contexts, action->ctxtNum)
+            getLength(map, &length, context);
+        FOREACH_END()
+    FOREACH_END()
+    return length;
+}
+
+BOOL initContext(Context* context, ActionDesc* actions, int actionNum) {
+    int rollbackLen = actionNum * sizeof(OneRollBackContext);
+    int length = initLength(&context->map, actions, actionNum);
+
+    char* data = malloc(length + rollbackLen);
+    if(context->data == NULL) return FALSE;
+
+    context->data = data;
+    context->castTo = castTo;
+    context->rollbackData.contexts = (OneRollBackContext*)(data + length);
+    context->rollbackData.num = 0;
+    return TRUE;
+}
+
+void destroyContext(Context* context) {
+    free(context->data);
+    free(context->map.hash);
 }

@@ -16,8 +16,8 @@ typedef struct Transaction {
   {actions, ARRAY_SIZE(actions)}
 
 typedef enum TransResult {
-  Succ,
-  Fail
+  TransSucc,
+  TransFail
 }TransResult;
 
 TransResult exec(const Transaction* trans);
