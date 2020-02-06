@@ -15,13 +15,16 @@ typedef ActionResult (*Action)(Context* context);
 typedef struct ContextDesc {
     int id;
     int size;
-} ContextDesc;
+} CtxtActionUse;
 
 typedef struct ActionDesc {
     Action action;
     int ctxtNum;
-    ContextDesc* contexts;
+    CtxtActionUse* contexts;
 } ActionDesc;
+
+extern CtxtActionUse* NullActionUse;
+#define NULL_CTXT_DESC() 0, NullActionUse
 
 #define DEF_CTXT_DESC(name) ARRAY_SIZE(name), name
 

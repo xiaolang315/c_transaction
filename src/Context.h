@@ -24,6 +24,7 @@ typedef struct OneRollBackContext {
 typedef struct RollbackContext {
     int num;
     OneRollBackContext* contexts;
+    struct RollbackContext* next;
 } RollbackContext;
 
 typedef struct ContextSet {

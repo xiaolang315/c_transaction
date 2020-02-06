@@ -4,6 +4,7 @@
 
 #include "Action.h"
 #include "ExternC.h"
+#include "FwdDecl.h"
 
 EXTERN_STDC_BEGIN
 
@@ -21,6 +22,11 @@ typedef enum TransResult {
 }TransResult;
 
 TransResult exec(const Transaction* trans);
+FWD_DECL(Context);
+typedef void (*PrepareChildCtxtFunc)(const Context* parent, Context* child);
+
+void NoPrepareChildCtxtFunc(const Context* parent, Context* child);
+TransResult subExec(Context* parent, PrepareChildCtxtFunc, const Transaction* trans);
 
 EXTERN_STDC_END
 

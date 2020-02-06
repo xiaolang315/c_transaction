@@ -25,7 +25,7 @@ static void insertHash(ContextMap* map, int offset, int id){
     map->hashNum ++;
 }
 
-static void getLength(ContextMap* map, int* length, ContextDesc* context){
+static void getLength(ContextMap* map, int* length, CtxtActionUse* context){
     int offSet = getOffSet(map, context->id);
     if(offSet == -1) {
         insertHash(map, *length, context->id);
@@ -55,28 +55,42 @@ static int initLength(ContextMap* map, ActionDesc* actions, int actionNum) {
     if(map->hash == NULL) return 0;
 
     FOREACH(ActionDesc, action, actions, actionNum)
-        FOREACH(ContextDesc, context, action->contexts, action->ctxtNum)
+        FOREACH(CtxtActionUse, context, action->contexts, action->ctxtNum)
             getLength(map, &length, context);
         FOREACH_END()
     FOREACH_END()
     return length;
 }
 
+BOOL initRollBackCtxt(RollbackContext* context, int actionNum){
+    context->contexts = (OneRollBackContext*)malloc(actionNum * sizeof(OneRollBackContext));
+    if(context->contexts == NULL) {
+        return FALSE;
+    }
+    context->next = NULL;
+    context->num = 0;
+    return TRUE;
+}
+
 BOOL initContext(Context* context, ActionDesc* actions, int actionNum) {
-    int rollbackLen = actionNum * sizeof(OneRollBackContext);
     int length = initLength(&context->map, actions, actionNum);
 
-    char* data = malloc(length + rollbackLen);
+    char* data = malloc(length);
     if(context->data == NULL) return FALSE;
 
     context->data = data;
     context->castTo = castTo;
-    context->rollbackData.contexts = (OneRollBackContext*)(data + length);
-    context->rollbackData.num = 0;
+
+    BOOL ret = initRollBackCtxt(&context->rollbackData, actionNum);
+    if(ret == FALSE) {
+        free(context->data);
+        return ret;
+    }
     return TRUE;
 }
 
 void destroyContext(Context* context) {
     free(context->data);
+    if(context->rollbackData.contexts) free(context->rollbackData.contexts);
     free(context->map.hash);
 }
