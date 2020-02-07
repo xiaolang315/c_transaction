@@ -16,8 +16,16 @@ typedef struct Transaction {
 #define TRANSACTION_DEF(actions)\
   {actions, ARRAY_SIZE(actions)}
 
+#define ACTIONS(...) {__VA_ARGS__}
+
+#define TRANS(name , actions)\
+    ActionDesc name##_actions[] = actions;\
+    Transaction name = TRANSACTION_DEF(name##_actions);
+
+
 typedef enum TransResult {
   TransSucc,
+  TransContinue,
   TransFail
 }TransResult;
 
@@ -27,6 +35,14 @@ typedef void (*PrepareChildCtxtFunc)(const Context* parent, Context* child);
 
 void NoPrepareChildCtxtFunc(const Context* parent, Context* child);
 TransResult subExec(Context* parent, PrepareChildCtxtFunc, const Transaction* trans);
+
+#define SUB_TRANS(name, actions)\
+        ActionDesc name##_actions[] = actions;\
+ActionResult name(Context* context) {\
+        Transaction trans = TRANSACTION_DEF(name##_actions);\
+        subExec(context, NoPrepareChildCtxtFunc, &trans);\
+        return ActionOk;\
+    }
 
 EXTERN_STDC_END
 

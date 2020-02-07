@@ -24,9 +24,9 @@ typedef struct ActionDesc {
 } ActionDesc;
 
 extern CtxtActionUse* NullActionUse;
-#define NULL_CTXT_DESC() 0, NullActionUse
 
-#define DEF_CTXT_DESC(name) ARRAY_SIZE(name), name
+#define DEF_ACTION_DESC(action, context) {action, ARRAY_SIZE(context), context}
+#define DEF_NULL_CTXT_ACTION_DESC(action) {action, 0, NullActionUse}
 
 #define DEF_ACTION_CTXT(name) {CTXT_ID(name), sizeof(name)}
 
