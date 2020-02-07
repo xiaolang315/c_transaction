@@ -77,6 +77,7 @@ BOOL initContext(Context* context, ActionDesc* actions, int actionNum) {
 
     char* data = malloc(length);
     if(context->data == NULL) return FALSE;
+    memset(data, 0, sizeof(length));
 
     context->data = data;
     context->castTo = castTo;

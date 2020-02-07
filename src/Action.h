@@ -7,6 +7,7 @@ typedef struct Context Context;
 
 typedef enum ActionResult {
    ActionOk,
+   ActionContinue,
    ActionErr
 } ActionResult;
 
@@ -29,5 +30,18 @@ extern CtxtActionUse* NullActionUse;
 #define DEF_NULL_CTXT_ACTION_DESC(action) {action, 0, NullActionUse}
 
 #define DEF_ACTION_CTXT(name) {CTXT_ID(name), sizeof(name)}
+
+#define STRUCTS(...) {__VA_ARGS__}
+
+#define ACTION_DEF(name, structs)\
+ActionResult name##func(Context* context);\
+CtxtActionUse name##_stucts[] = structs;\
+ActionDesc name = DEF_ACTION_DESC(name##func, name##_stucts);\
+ActionResult name##func
+
+#define NULL_CTXT_ACTION_DEF(name)\
+ActionResult name##func(Context* context);\
+ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
+ActionResult name##func
 
 #endif // __ACTION_H_

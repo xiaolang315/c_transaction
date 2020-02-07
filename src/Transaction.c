@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include "BaseType.h"
 
-static void rollback(RollbackContext* context) {
+void rollback(RollbackContext* context) {
     FOREACH(OneRollBackContext, ctxt, context->contexts, context->num)
         ctxt->action(&ctxt->data);
         free(ctxt->data.mem);

@@ -13,7 +13,10 @@ namespace {
         int t[10];
     };
 
-    ActionResult SimpleAction2(Context* context) {
+    ACTION_DEF(SimpleAction2, STRUCTS(
+            DEF_ACTION_CTXT(SimpleStruct1)
+            ,DEF_ACTION_CTXT(SimpleStruct)
+            ))(Context* context) {
         CAST_TO(SimpleStruct1, s);
         s->t[0] = 1;
 
@@ -22,13 +25,13 @@ namespace {
         return ActionOk;
     }
 
-    ActionResult SimpleAction(Context* context) {
+    ACTION_DEF(SimpleAction, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
         CAST_TO(SimpleStruct, s);
         s->x = 1;
         return ActionOk;
     }
 
-    ActionResult SimpleActionCheck(Context* context) {
+    ACTION_DEF(SimpleActionCheck, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
         CAST_TO(SimpleStruct, s);
         mock().actualCall("SimpleActionCheck").withParameter("x", s->x);
         return ActionOk;
@@ -38,24 +41,11 @@ namespace {
         char y;
     };
 
-    ActionResult SimpleFailAction(Context* context) {
+    ACTION_DEF(SimpleFailAction, STRUCTS(DEF_ACTION_CTXT(SimpleFailStruct)))(Context* context) {
         CAST_TO(SimpleFailStruct, s);
         s->y = 2;
         return ActionErr;
     }
-
-    CtxtActionUse SimpleAction2CtxtDesc[] = {
-            DEF_ACTION_CTXT(SimpleStruct1)
-            ,DEF_ACTION_CTXT(SimpleStruct1)
-    };
-
-    CtxtActionUse SimpleActionCtxtDesc[] = {
-            DEF_ACTION_CTXT(SimpleStruct)
-    };
-
-    CtxtActionUse SimpleFailActionCtxtDesc[] = {
-            DEF_ACTION_CTXT(SimpleFailStruct)
-    };
 
     TEST_GROUP(TransactionTest){
         void teardown()
@@ -66,10 +56,11 @@ namespace {
 
 
     TEST(TransactionTest, exec_one_action) {
+        mock().expectOneCall("SimpleActionCheck").ignoreOtherParameters();
         TRANS(trans,
-              ACTIONS( DEF_ACTION_DESC(SimpleAction , SimpleActionCtxtDesc)
-                      ,DEF_ACTION_DESC(SimpleAction2 , SimpleAction2CtxtDesc)
-                      ,DEF_ACTION_DESC(SimpleActionCheck , SimpleActionCtxtDesc)
+              ACTIONS( SimpleAction
+                      ,SimpleAction2
+                      ,SimpleActionCheck
               )
         )
         TransResult ret = exec(&trans);
@@ -80,9 +71,9 @@ namespace {
     TEST(TransactionTest, exec_one_failed_action_stop_trans) {
         mock().expectNoCall("SimpleActionCheck");
         TRANS(trans,
-                ACTIONS( DEF_ACTION_DESC(SimpleAction , SimpleActionCtxtDesc)
-                        ,DEF_ACTION_DESC(SimpleFailAction , SimpleFailActionCtxtDesc)
-                        ,DEF_ACTION_DESC(SimpleActionCheck , SimpleActionCtxtDesc)
+                ACTIONS( SimpleAction
+                        ,SimpleFailAction
+                        ,SimpleActionCheck
                 )
         )
         TransResult ret = exec(&trans);
@@ -102,7 +93,7 @@ namespace {
 
     const int Expect_X = 0xfe;
 
-    ActionResult SimpleActionRollbackCheck(Context* context) {
+    NULL_CTXT_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
         RollbackStruct s = {Expect_X};
         RollbackData data = {&s, sizeof(s)};
         AddRollBack(&context->rollbackData, RollBackActionDemo, &data);
@@ -112,9 +103,9 @@ namespace {
     TEST(TransactionTest, exec_one_failed_action_roll_back) {
         mock().expectOneCall("RollBackDemo").withParameter("x", Expect_X);
         TRANS(trans,
-                ACTIONS( DEF_ACTION_DESC(SimpleAction , SimpleActionCtxtDesc)
-                        , DEF_ACTION_DESC(SimpleActionRollbackCheck , SimpleActionCtxtDesc)
-                        , DEF_ACTION_DESC(SimpleFailAction , SimpleFailActionCtxtDesc)
+                ACTIONS( SimpleAction
+                        , SimpleActionRollbackCheck
+                        , SimpleFailAction
                 )
         )
         TransResult ret = exec(&trans);
@@ -124,17 +115,18 @@ namespace {
 
 
     SUB_TRANS(SubSimpleAction,
-              ACTIONS(DEF_ACTION_DESC(SimpleAction , SimpleActionCtxtDesc)
-                            , DEF_ACTION_DESC(SimpleActionRollbackCheck , SimpleActionCtxtDesc)
-                            , DEF_ACTION_DESC(SimpleFailAction , SimpleFailActionCtxtDesc))
+              ACTIONS(SimpleAction
+                            , SimpleActionRollbackCheck
+                            , SimpleFailAction
+              )
     )
 
 
     TEST(TransactionTest, sub_proc_failed_action_roll_back_do_not_effect_main_proc) {
         mock().expectOneCall("RollBackDemo").ignoreOtherParameters();
         TRANS(trans,
-                ACTIONS( DEF_ACTION_DESC(SimpleAction , SimpleActionCtxtDesc)
-                               , DEF_NULL_CTXT_ACTION_DESC(SubSimpleAction)
+                ACTIONS( SimpleAction
+                               , SubSimpleAction
                 )
         )
         TransResult ret = exec(&trans);
@@ -143,17 +135,17 @@ namespace {
     }
 
     SUB_TRANS(SubSimpleActionSucc,
-              ACTIONS(DEF_ACTION_DESC(SimpleAction , SimpleActionCtxtDesc)
-                              , DEF_ACTION_DESC(SimpleActionRollbackCheck , SimpleActionCtxtDesc)
+              ACTIONS(SimpleAction
+                      , SimpleActionRollbackCheck
               )
     )
 
     TEST(TransactionTest, sub_trans_succ_but_main_trans_fail_also_need_roll_back) {
         mock().expectOneCall("RollBackDemo").ignoreOtherParameters();
         TRANS(trans,
-                ACTIONS( DEF_ACTION_DESC(SimpleAction , SimpleActionCtxtDesc)
-                ,DEF_NULL_CTXT_ACTION_DESC(SubSimpleActionSucc)
-                ,DEF_ACTION_DESC(SimpleFailAction , SimpleFailActionCtxtDesc)
+                ACTIONS( SimpleAction
+                ,SubSimpleActionSucc
+                ,SimpleFailAction
                 )
         )
         TransResult ret = exec(&trans);
