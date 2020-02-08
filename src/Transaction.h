@@ -36,7 +36,7 @@ FWD_DECL(Context);
 typedef void (*PrepareChildCtxtFunc)(const Context* parent, Context* child);
 
 void NoPrepareChildCtxtFunc(const Context* parent, Context* child);
-TransResult subExec(Context* parent, PrepareChildCtxtFunc, const Transaction* trans);
+ActionResult subExec(Context* parent, PrepareChildCtxtFunc, const Transaction* trans);
 
 #define SUB_TRANS(name, actions)\
     ActionDesc name##_actions[] = actions;\
@@ -47,6 +47,16 @@ TransResult subExec(Context* parent, PrepareChildCtxtFunc, const Transaction* tr
         subExec(context, NoPrepareChildCtxtFunc, &trans);\
         return ActionOk;\
     }
+
+#define SUB_TRANS_UP(name, actions)\
+    ActionDesc name##_actions[] = actions;\
+    ActionResult name##func(Context* context);\
+    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
+    ActionResult name##func(Context* context) {\
+        Transaction trans = TRANSACTION_DEF(name##_actions);\
+        return subExec(context, NoPrepareChildCtxtFunc, &trans);\
+    }
+
 
 EXTERN_STDC_END
 

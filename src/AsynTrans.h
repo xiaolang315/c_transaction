@@ -11,13 +11,19 @@
 
 EXTERN_STDC_BEGIN
 
+typedef struct RuntimeAction {
+    Action action;
+    struct RuntimeAction* next;
+} RuntimeAction;
+
 typedef struct AsynContext {
     Context*  context;
-    int actionIndex;
+    RuntimeAction current;
+    void* runtimeActions;
 } AsynContext;
 
 TransResult start(Transaction*, AsynContext*);
-TransResult asyn_exec(Transaction*, AsynContext*);
+TransResult asyn_exec(AsynContext*);
 
 EXTERN_STDC_END
 

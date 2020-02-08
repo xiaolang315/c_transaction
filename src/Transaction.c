@@ -44,10 +44,10 @@ static void upToParent(Context* parent, Context* child) {
     child->rollbackData.contexts = NULL;
 }
 
-TransResult subExec(Context* parent, PrepareChildCtxtFunc prepare, const Transaction* trans){
+ActionResult subExec(Context* parent, PrepareChildCtxtFunc prepare, const Transaction* trans){
     Context context;
     BOOL ret = initContext(&context, trans->actions, trans->actionNum);
-    if(ret == FALSE) return TransFail;
+    if(ret == FALSE) return ActionOk;
 
     prepare(parent, &context);
 
@@ -56,12 +56,12 @@ TransResult subExec(Context* parent, PrepareChildCtxtFunc prepare, const Transac
         if(ret != ActionOk){
             rollback(&context.rollbackData);
             destroyContext(&context);
-            return TransFail;
+            return ret;
         }
     FOREACH_END()
     upToParent(parent, &context);
     destroyContext(&context);
-    return TransSucc;
+    return ActionOk;
 }
 
 

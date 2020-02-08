@@ -46,8 +46,32 @@ TEST(AsynTransTest, start_a_asyn_trans) {
     mock().clear();
 
     mock().expectOneCall("SimpleActionCheck");
-    ret = asyn_exec(&trans, &context);
+    ret = asyn_exec(&context);
     CHECK_EQUAL(ret, TransSucc);
     mock().checkExpectations();
 }
 
+
+SUB_TRANS_UP(sub, ACTIONS(SimpleAction, SimpleActionCheck))
+
+//TEST(AsynTransTest, start_a_asyn_trans_with_subtruns) {
+//
+//    TRANS(trans,
+//          ACTIONS(SimpleAction
+//                  , sub
+//          )
+//    )
+//
+//    AsynContext context;
+//    TransResult ret = start(&trans, &context);
+//    CHECK_EQUAL(ret, TransContinue);
+//
+//    ret = asyn_exec(&context);
+//    CHECK_EQUAL(ret, TransContinue);
+//
+//    mock().expectOneCall("SimpleActionCheck");
+//    ret = asyn_exec(&context);
+//    CHECK_EQUAL(ret, TransSucc);
+//
+//    mock().checkExpectations();
+//}

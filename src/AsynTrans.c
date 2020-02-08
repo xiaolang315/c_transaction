@@ -6,41 +6,62 @@
 #include "Foreach.h"
 #include <stdlib.h>
 
-TransResult start(Transaction* trans, AsynContext* outContext) {
-    Context* context = (Context*)malloc(sizeof(Context));
-    BOOL ret = initContext(context, trans->actions, trans->actionNum);
-    if(ret == FALSE) return TransFail;
+BOOL initRuntimeActions(AsynContext* context, ActionDesc* actions, int actionNum){
 
-    outContext->context = context;
+    RuntimeAction* runtimeAction = (RuntimeAction*)malloc(actionNum * sizeof(RuntimeAction));
+    if(runtimeAction == NULL) return FALSE;
 
-    FOREACH(ActionDesc, action, trans->actions, trans->actionNum)
-        ActionResult ret = action->action(context);
-        if(ret == ActionErr){
-            rollback(&context->rollbackData);
-            destroyContext(context);
-            return TransFail;
-        } else if(ret == ActionContinue) {
-            outContext->actionIndex = (action - trans->actions)/ sizeof(ActionDesc);
-            return TransContinue;
-        }
+    RuntimeAction* current = &context->current;
+    FOREACH(ActionDesc, action, actions, actionNum)
+        current->action = action->action;
+        current->next = &runtimeAction[actioni];
+        current = current->next;
     FOREACH_END()
-
-    destroyContext(context);
-    return TransSucc;
+    current->next = NULL;
+    current->action = NULL;
+    context->runtimeActions = runtimeAction;
+    return TRUE;
 }
 
-TransResult asyn_exec(Transaction* trans, AsynContext* asynContext) {
-    FOREACH_FROM(ActionDesc, action, trans->actions, asynContext->actionIndex, trans->actionNum)
-        ActionResult ret = action->action(asynContext->context);
+void destoryAsynContext(const AsynContext* context) {
+    destroyContext(context->context);
+    free(context->context);
+    free(context->runtimeActions);
+}
+
+TransResult start(Transaction* trans, AsynContext* outContext) {
+    Context* context = (Context*)malloc(sizeof(Context));
+    if(context == NULL) return TransFail;
+
+    BOOL ret = initContext(context, trans->actions, trans->actionNum);
+    if(ret == FALSE) {
+        free(context);
+        return TransFail;
+    }
+    outContext->context = context;
+
+    ret = initRuntimeActions(outContext, trans->actions, trans->actionNum);
+    if(ret == FALSE) {
+        destoryAsynContext(outContext);
+        return TransFail;
+    }
+
+    return asyn_exec(outContext);
+}
+
+TransResult asyn_exec(AsynContext* asynContext) {
+    do{
+        ActionResult ret = asynContext->current.action(asynContext->context);
         if(ret == ActionErr){
             rollback(&asynContext->context->rollbackData);
-            destroyContext(asynContext->context);
+            destoryAsynContext(asynContext);
             return TransFail;
         } else if(ret == ActionContinue) {
             return TransContinue;
         }
-    FOREACH_END()
-    destroyContext(asynContext->context);
+        asynContext->current = *asynContext->current.next;
+    } while(asynContext->current.action != NULL);
+    destoryAsynContext(asynContext);
     return TransSucc;
 }
 

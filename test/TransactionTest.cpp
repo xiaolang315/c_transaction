@@ -153,4 +153,20 @@ namespace {
         mock().checkExpectations();
     }
 
+    SUB_TRANS_UP(SubSimpleActionFail,
+              ACTIONS(SimpleAction
+                      , SimpleFailAction
+              )
+    )
+
+    TEST(TransactionTest, sub_trans_fail_main_trans_fail) {
+        TRANS(trans,
+              ACTIONS( SimpleAction
+                      ,SubSimpleActionFail
+              )
+        )
+        TransResult ret = exec(&trans);
+        CHECK_EQUAL(ret, TransFail);
+    }
+
 } // namespace
