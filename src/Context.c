@@ -47,18 +47,24 @@ BOOL AddRollBack(RollbackContext* context, RollBackAction action, const Rollback
     return TRUE;
 }
 
-static int initLength(ContextMap* map, ActionDesc* actions, int actionNum) {
+static int initLength(ContextMap* map, ActionDesc* actions, int actionNum, BOOL* outAync) {
     int length = 0;
+    BOOL isAsync = FALSE;
     map->hashNum = 0;
 
     map->hash = malloc(actionNum * sizeof(ContextSet));
     if(map->hash == NULL) return 0;
 
     FOREACH(ActionDesc, action, actions, actionNum)
+        if(action->type == AsynAction) {
+            isAsync = TRUE;
+        }
         FOREACH(CtxtActionUse, context, action->contexts, action->ctxtNum)
             getLength(map, &length, context);
         FOREACH_END()
     FOREACH_END()
+
+    *outAync = isAsync;
     return length;
 }
 
@@ -73,7 +79,13 @@ BOOL initRollBackCtxt(RollbackContext* context, int actionNum){
 }
 
 BOOL initContext(Context* context, ActionDesc* actions, int actionNum) {
-    int length = initLength(&context->map, actions, actionNum);
+    BOOL isAsyn = FALSE;
+    int length = initLength(&context->map, actions, actionNum, &isAsyn);
+
+    if(isAsyn == TRUE) {
+        context->asynContext = (AsynContext*)malloc(sizeof(AsynContext));
+        if(context->data == NULL) return FALSE;
+    }
 
     char* data = malloc(length);
     if(context->data == NULL) return FALSE;

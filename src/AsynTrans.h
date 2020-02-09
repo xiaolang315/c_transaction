@@ -7,23 +7,23 @@
 
 #include "Transaction.h"
 #include "Context.h"
-#include "ExternC.h"
 
 EXTERN_STDC_BEGIN
 
-typedef struct RuntimeAction {
-    Action action;
-    struct RuntimeAction* next;
-} RuntimeAction;
+TransResult start(Transaction*, Context**);
+TransResult asyn_exec(Context*);
 
-typedef struct AsynContext {
-    Context*  context;
-    RuntimeAction current;
-    void* runtimeActions;
-} AsynContext;
+ActionResult toActionResult(TransResult ret) ;
+TransResult doAsync(Context* context, Transaction* trans);
 
-TransResult start(Transaction*, AsynContext*);
-TransResult asyn_exec(AsynContext*);
+#define ASYN_SUB_TRANS(name, actions)\
+ActionDesc name##_actions[] = actions;\
+    ActionResult name##func(Context* context);\
+    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
+ ActionResult name##func(Context* context) {\
+    Transaction trans = TRANSACTION_DEF(name##_actions);\
+    return toActionResult(doAsync(context, &trans));\
+}
 
 EXTERN_STDC_END
 

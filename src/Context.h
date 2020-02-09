@@ -5,6 +5,7 @@
 #include "ExternC.h"
 #include "BaseType.h"
 #include "FwdDecl.h"
+#include "Action.h"
 
 EXTERN_STDC_BEGIN
 
@@ -39,11 +40,24 @@ typedef struct ContextMap {
 
 typedef void* (*CastTo)(const ContextMap*, void* data, int id);
 
+FWD_DECL(AsynContext);
+typedef struct RuntimeAction {
+    Action action;
+    struct RuntimeAction* next;
+    Context* context;
+} RuntimeAction;
+
+typedef struct AsynContext {
+    RuntimeAction current;
+    void* runtimeActions;
+} AsynContext;
+
 typedef struct Context {
   void* data;
   CastTo castTo;
   ContextMap map;
   RollbackContext rollbackData;
+  AsynContext* asynContext;
 } Context;
 
 #define CTXT_ID(name) name##Id
