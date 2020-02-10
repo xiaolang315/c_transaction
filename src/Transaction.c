@@ -1,8 +1,33 @@
+//
+// Created by zhangchao on 2020/2/10.
+//
+
 #include "Transaction.h"
-#include "Context.h"
 #include "Foreach.h"
-#include <stdlib.h>
-#include "BaseType.h"
+#include "stdlib.h"
+
+ActionResult toActionResult(TransResult ret) {
+    switch(ret){
+        case TransSucc: return ActionOk;
+        case TransFail: return ActionErr;
+        case TransContinue: return ActionContinue;
+        default: return ActionUnknow;
+    }
+}
+
+void upToParent(Context* parent, Context* child) {
+    RollbackContext* next = (RollbackContext*)malloc(sizeof(RollbackContext));
+    *next = child->rollbackData;
+    parent->rollbackData.next = next;
+    child->rollbackData.contexts = NULL;
+}
+
+
+void NoPrepareChildCtxtFunc(const Context* parent, Context* child){
+    if(child && parent) {
+        return;
+    }
+}
 
 void rollback(RollbackContext* context) {
     FOREACH(OneRollBackContext, ctxt, context->contexts, context->num)
@@ -14,55 +39,3 @@ void rollback(RollbackContext* context) {
         free((context->next));
     }
 }
-
-TransResult exec(const Transaction* trans){
-    Context context;
-    BOOL ret = initContext(&context, trans->actions, trans->actionNum);
-    if(ret == FALSE) return TransFail;
-
-    FOREACH(ActionDesc, action, trans->actions, trans->actionNum)
-        ActionResult ret = action->action(&context);
-        if(ret != ActionOk){
-            rollback(&context.rollbackData);
-            destroyContext(&context);
-            return TransFail;
-        }
-    FOREACH_END()
-
-    destroyContext(&context);
-    return TransSucc;
-}
-
-void NoPrepareChildCtxtFunc(const Context* parent, Context* child){
-
-}
-
-static void upToParent(Context* parent, Context* child) {
-    RollbackContext* next = (RollbackContext*)malloc(sizeof(RollbackContext));
-    *next = child->rollbackData;
-    parent->rollbackData.next = next;
-    child->rollbackData.contexts = NULL;
-}
-
-ActionResult subExec(Context* parent, PrepareChildCtxtFunc prepare, const Transaction* trans){
-    Context context;
-    BOOL ret = initContext(&context, trans->actions, trans->actionNum);
-    if(ret == FALSE) return ActionOk;
-
-    prepare(parent, &context);
-
-    FOREACH(ActionDesc, action, trans->actions, trans->actionNum)
-        ActionResult ret = action->action(&context);
-        if(ret != ActionOk){
-            rollback(&context.rollbackData);
-            destroyContext(&context);
-            return ret;
-        }
-    FOREACH_END()
-    upToParent(parent, &context);
-    destroyContext(&context);
-    return ActionOk;
-}
-
-
-

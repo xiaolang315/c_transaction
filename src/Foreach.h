@@ -2,7 +2,7 @@
 #define __FOREACH_H_
 
 #define FOREACH_FROM(type, item, list, start, num) \
- for( unsigned int item##i = start; item##i < num; item##i++ ) {\
+ for( uint32_t item##i = start; item##i < num; item##i++ ) {\
     type* item = &list[item##i];
 
 #define FOREACH(type, item, list, num) \

@@ -8,24 +8,24 @@
 #include "Foreach.h"
 #include "Action.h"
 
-static int getOffSet(const ContextMap* map,  int id){
+static int getOffSet(const ContextMap* map,  uint32_t id){
     for( unsigned int i =0; i< map->hashNum; i++ ) {
         if(id == map->hash[i].id) return map->hash[i].offset;
     }
     return -1;
 }
 
-static void* castTo(const ContextMap* map, void* data, int id){
+static void* castTo(const ContextMap* map, void* data, uint32_t id){
     return data + getOffSet(map, id);
 }
 
-static void insertHash(ContextMap* map, int offset, int id){
+static void insertHash(ContextMap* map, uint32_t offset, uint32_t id){
     map->hash[map->hashNum].id = id;
     map->hash[map->hashNum].offset = offset;
     map->hashNum ++;
 }
 
-static void getLength(ContextMap* map, int* length, CtxtActionUse* context){
+static void getLength(ContextMap* map, uint32_t* length, CtxtActionUse* context){
     int offSet = getOffSet(map, context->id);
     if(offSet == -1) {
         insertHash(map, *length, context->id);
@@ -34,6 +34,7 @@ static void getLength(ContextMap* map, int* length, CtxtActionUse* context){
 }
 
 BOOL AddRollBack(RollbackContext* context, RollBackAction action, const RollbackData* data){
+    if(context->num == context->maxNum) return FALSE;
     context->contexts[context->num].action = action;
 
     RollbackData* toData = &context->contexts[context->num].data;
@@ -47,8 +48,8 @@ BOOL AddRollBack(RollbackContext* context, RollBackAction action, const Rollback
     return TRUE;
 }
 
-static int initLength(ContextMap* map, ActionDesc* actions, int actionNum, BOOL* outAync) {
-    int length = 0;
+static uint32_t initLength(ContextMap* map, ActionDesc* actions, uint32_t actionNum, BOOL* outAync) {
+    uint32_t length = 0;
     BOOL isAsync = FALSE;
     map->hashNum = 0;
 
@@ -56,7 +57,7 @@ static int initLength(ContextMap* map, ActionDesc* actions, int actionNum, BOOL*
     if(map->hash == NULL) return 0;
 
     FOREACH(ActionDesc, action, actions, actionNum)
-        if(action->type == AsynAction) {
+        if(action->type == AsynActionType) {
             isAsync = TRUE;
         }
         FOREACH(CtxtActionUse, context, action->contexts, action->ctxtNum)
@@ -75,16 +76,20 @@ BOOL initRollBackCtxt(RollbackContext* context, int actionNum){
     }
     context->next = NULL;
     context->num = 0;
+    context->maxNum = actionNum;
     return TRUE;
 }
 
 BOOL initContext(Context* context, ActionDesc* actions, int actionNum) {
     BOOL isAsyn = FALSE;
-    int length = initLength(&context->map, actions, actionNum, &isAsyn);
+    uint32_t length = initLength(&context->map, actions, actionNum, &isAsyn);
 
     if(isAsyn == TRUE) {
         context->asynContext = (AsynContext*)malloc(sizeof(AsynContext));
         if(context->data == NULL) return FALSE;
+        context->asynContext->runtimeActions = NULL;
+    } else {
+        context->asynContext = NULL;
     }
 
     char* data = malloc(length);
@@ -105,5 +110,11 @@ BOOL initContext(Context* context, ActionDesc* actions, int actionNum) {
 void destroyContext(Context* context) {
     free(context->data);
     if(context->rollbackData.contexts) free(context->rollbackData.contexts);
+    if(context->asynContext) {
+        if(context->asynContext->runtimeActions) {
+            free(context->asynContext->runtimeActions);
+        }
+        free(context->asynContext);
+    }
     free(context->map.hash);
 }

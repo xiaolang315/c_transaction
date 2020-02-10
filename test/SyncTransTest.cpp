@@ -1,7 +1,7 @@
 
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
-#include "Transaction.h"
+#include "SyncTransaction.h"
 #include "Context.h"
 
 namespace {
@@ -25,7 +25,7 @@ namespace {
         return ActionOk;
     }
 
-    ACTION_DEF(SimpleAction, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
+    ACTION_DEF(SimpleAsynAction, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
         CAST_TO(SimpleStruct, s);
         s->x = 1;
         return ActionOk;
@@ -58,12 +58,12 @@ namespace {
     TEST(TransactionTest, exec_one_action) {
         mock().expectOneCall("SimpleActionCheck").ignoreOtherParameters();
         TRANS(trans,
-              ACTIONS( SimpleAction
-                      ,SimpleAction2
-                      ,SimpleActionCheck
+              ACTIONS(SimpleAsynAction
+                      , SimpleAction2
+                      , SimpleActionCheck
               )
         )
-        TransResult ret = exec(&trans);
+        TransResult ret = syncExec(&trans);
         CHECK_EQUAL(ret, TransSucc);
         mock().checkExpectations();
     }
@@ -71,12 +71,12 @@ namespace {
     TEST(TransactionTest, exec_one_failed_action_stop_trans) {
         mock().expectNoCall("SimpleActionCheck");
         TRANS(trans,
-                ACTIONS( SimpleAction
-                        ,SimpleFailAction
-                        ,SimpleActionCheck
+                ACTIONS(SimpleAsynAction
+                        , SimpleFailAction
+                        , SimpleActionCheck
                 )
         )
-        TransResult ret = exec(&trans);
+        TransResult ret = syncExec(&trans);
         CHECK_EQUAL(ret, TransFail);
         mock().checkExpectations();
     }
@@ -93,7 +93,7 @@ namespace {
 
     const int Expect_X = 0xfe;
 
-    NULL_CTXT_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
+    NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
         RollbackStruct s = {Expect_X};
         RollbackData data = {&s, sizeof(s)};
         AddRollBack(&context->rollbackData, RollBackActionDemo, &data);
@@ -103,19 +103,19 @@ namespace {
     TEST(TransactionTest, exec_one_failed_action_roll_back) {
         mock().expectOneCall("RollBackDemo").withParameter("x", Expect_X);
         TRANS(trans,
-                ACTIONS( SimpleAction
+                ACTIONS(SimpleAsynAction
                         , SimpleActionRollbackCheck
                         , SimpleFailAction
                 )
         )
-        TransResult ret = exec(&trans);
+        TransResult ret = syncExec(&trans);
         CHECK_EQUAL(ret, TransFail);
         mock().checkExpectations();
     }
 
 
-    SUB_TRANS(SubSimpleAction,
-              ACTIONS(SimpleAction
+    SYNC_SUB_TRANS(SubSimpleAction,
+                   ACTIONS(SimpleAsynAction
                             , SimpleActionRollbackCheck
                             , SimpleFailAction
               )
@@ -125,17 +125,17 @@ namespace {
     TEST(TransactionTest, sub_proc_failed_action_roll_back_do_not_effect_main_proc) {
         mock().expectOneCall("RollBackDemo").ignoreOtherParameters();
         TRANS(trans,
-                ACTIONS( SimpleAction
+                ACTIONS(SimpleAsynAction
                                , SubSimpleAction
                 )
         )
-        TransResult ret = exec(&trans);
+        TransResult ret = syncExec(&trans);
         CHECK_EQUAL(ret, TransSucc);
         mock().checkExpectations();
     }
 
-    SUB_TRANS(SubSimpleActionSucc,
-              ACTIONS(SimpleAction
+    SYNC_SUB_TRANS(SubSimpleActionSucc,
+                   ACTIONS(SimpleAsynAction
                       , SimpleActionRollbackCheck
               )
     )
@@ -143,29 +143,29 @@ namespace {
     TEST(TransactionTest, sub_trans_succ_but_main_trans_fail_also_need_roll_back) {
         mock().expectOneCall("RollBackDemo").ignoreOtherParameters();
         TRANS(trans,
-                ACTIONS( SimpleAction
-                ,SubSimpleActionSucc
-                ,SimpleFailAction
+                ACTIONS(SimpleAsynAction
+                , SubSimpleActionSucc
+                , SimpleFailAction
                 )
         )
-        TransResult ret = exec(&trans);
+        TransResult ret = syncExec(&trans);
         CHECK_EQUAL(ret, TransFail);
         mock().checkExpectations();
     }
 
-    SUB_TRANS_UP(SubSimpleActionFail,
-              ACTIONS(SimpleAction
+    SYNC_SUB_TRANS_UP(SubSimpleActionFail,
+                      ACTIONS(SimpleAsynAction
                       , SimpleFailAction
               )
     )
 
     TEST(TransactionTest, sub_trans_fail_main_trans_fail) {
         TRANS(trans,
-              ACTIONS( SimpleAction
-                      ,SubSimpleActionFail
+              ACTIONS(SimpleAsynAction
+                      , SubSimpleActionFail
               )
         )
-        TransResult ret = exec(&trans);
+        TransResult ret = syncExec(&trans);
         CHECK_EQUAL(ret, TransFail);
     }
 

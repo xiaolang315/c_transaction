@@ -1,16 +1,25 @@
-#ifndef __TRANSACTION_H_
-#define __TRANSACTION_H_
+//
+// Created by zhangchao on 2020/2/10.
+//
 
+#ifndef C_TRANSACTION_TRANSACTION_H
+#define C_TRANSACTION_TRANSACTION_H
 
 #include "Action.h"
+#include "Context.h"
 #include "ExternC.h"
-#include "FwdDecl.h"
 
 EXTERN_STDC_BEGIN
 
+typedef enum TransResult {
+    TransSucc,
+    TransContinue,
+    TransFail
+}TransResult;
+
 typedef struct Transaction {
-  ActionDesc* actions;
-  unsigned int actionNum;
+    ActionDesc* actions;
+    uint32_t actionNum;
 } Transaction;
 
 #define TRANSACTION_DEF(actions)\
@@ -22,42 +31,13 @@ typedef struct Transaction {
     ActionDesc name##_actions[] = actions;\
     Transaction name = TRANSACTION_DEF(name##_actions);
 
-
-typedef enum TransResult {
-  TransSucc,
-  TransContinue,
-  TransFail
-}TransResult;
-
-FWD_DECL(RollbackContext);
+ActionResult toActionResult(TransResult ret) ;
 void rollback(RollbackContext* context);
-TransResult exec(const Transaction* trans);
-FWD_DECL(Context);
+void upToParent(Context* parent, Context* child);
+
 typedef void (*PrepareChildCtxtFunc)(const Context* parent, Context* child);
-
 void NoPrepareChildCtxtFunc(const Context* parent, Context* child);
-ActionResult subExec(Context* parent, PrepareChildCtxtFunc, const Transaction* trans);
-
-#define SUB_TRANS(name, actions)\
-    ActionDesc name##_actions[] = actions;\
-    ActionResult name##func(Context* context);\
-    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
-    ActionResult name##func(Context* context) {\
-        Transaction trans = TRANSACTION_DEF(name##_actions);\
-        subExec(context, NoPrepareChildCtxtFunc, &trans);\
-        return ActionOk;\
-    }
-
-#define SUB_TRANS_UP(name, actions)\
-    ActionDesc name##_actions[] = actions;\
-    ActionResult name##func(Context* context);\
-    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
-    ActionResult name##func(Context* context) {\
-        Transaction trans = TRANSACTION_DEF(name##_actions);\
-        return subExec(context, NoPrepareChildCtxtFunc, &trans);\
-    }
-
 
 EXTERN_STDC_END
 
-#endif // __TRANSACTION_H_
+#endif //C_TRANSACTION_TRANSACTION_H

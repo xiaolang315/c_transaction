@@ -9,10 +9,9 @@
 
 EXTERN_STDC_BEGIN
 
-
 typedef struct RollbackData {
     void* mem;
-    int len;
+    uint32_t len;
 } RollbackData;
 
 typedef void (*RollBackAction)(RollbackData*);
@@ -23,22 +22,23 @@ typedef struct OneRollBackContext {
 } OneRollBackContext;
 
 typedef struct RollbackContext {
-    int num;
+    uint32_t num;
+    uint32_t maxNum;
     OneRollBackContext* contexts;
     struct RollbackContext* next;
 } RollbackContext;
 
 typedef struct ContextSet {
-    int id;
-    int offset;
+    uint32_t id;
+    uint32_t offset;
 }ContextSet;
 
 typedef struct ContextMap {
     ContextSet* hash;
-    int hashNum;
+    uint32_t hashNum;
 } ContextMap;
 
-typedef void* (*CastTo)(const ContextMap*, void* data, int id);
+typedef void* (*CastTo)(const ContextMap*, void* data, uint32_t id);
 
 FWD_DECL(AsynContext);
 typedef struct RuntimeAction {
