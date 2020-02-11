@@ -1,7 +1,7 @@
+#include <stddef.h>
 #include "SyncTransaction.h"
 #include "Context.h"
 #include "Foreach.h"
-#include "BaseType.h"
 
 static TransResult execActions(ActionDesc* actions, uint32_t actionNum, Context* context) {
     FOREACH(ActionDesc, action, actions, actionNum)
@@ -14,37 +14,35 @@ static TransResult execActions(ActionDesc* actions, uint32_t actionNum, Context*
 }
 
 TransResult syncExec(const Transaction* trans){
-    Context context;
-    BOOL ret = initContext(&context, trans->actions, trans->actionNum);
-    if(ret == FALSE) return TransFail;
+    Context* context = initContext(trans->actions, trans->actionNum);
+    if(context == NULL) return TransFail;
 
-    TransResult result = execActions(trans->actions, trans->actionNum, &context);
+    TransResult result = execActions(trans->actions, trans->actionNum, context);
     if(result == TransFail) {
-        rollback(&context.rollbackData);
-        destroyContext(&context);
+        rollback(&context->rollbackData);
+        destroyContext(context);
         return TransFail;
     }
 
-    destroyContext(&context);
+    destroyContext(context);
     return TransSucc;
 }
 
 ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc prepare, const Transaction* trans){
-    Context context;
-    BOOL ret = initContext(&context, trans->actions, trans->actionNum);
-    if(ret == FALSE) return ActionErr;
+    Context* context = initContext(trans->actions, trans->actionNum);
+    if(context == NULL) return ActionErr;
 
-    prepare(parent, &context);
+    prepare(parent, context);
 
-    TransResult result = execActions(trans->actions, trans->actionNum, &context);
+    TransResult result = execActions(trans->actions, trans->actionNum, context);
     if(result == TransFail) {
-        rollback(&context.rollbackData);
-        destroyContext(&context);
+        rollback(&context->rollbackData);
+        destroyContext(context);
         return ActionErr;
     }
 
-    upToParent(parent, &context);
-    destroyContext(&context);
+    upToParent(parent, context);
+    destroyContext(context);
     return ActionOk;
 }
 

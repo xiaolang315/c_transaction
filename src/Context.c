@@ -2,16 +2,16 @@
 // Created by zhangchao on 2020/2/3.
 //
 #include "Context.h"
-#include "memory.h"
-#include "stdlib.h"
 #include "BaseType.h"
 #include "Foreach.h"
 #include "Action.h"
+#include "MemHelp.h"
+#include <memory.h>
 
 static int getOffSet(const ContextMap* map,  uint32_t id){
-    for( unsigned int i =0; i< map->hashNum; i++ ) {
-        if(id == map->hash[i].id) return map->hash[i].offset;
-    }
+    FOREACH(ContextSet, set, map->hash, map->hashNum)
+        if(id == set->id) return set->offset;
+    FOREACH_END()
     return -1;
 }
 
@@ -80,41 +80,49 @@ BOOL initRollBackCtxt(RollbackContext* context, int actionNum){
     return TRUE;
 }
 
-BOOL initContext(Context* context, ActionDesc* actions, int actionNum) {
+static AsynContext* initAsynContext(BOOL isAsyn) {
+    AsynContext* context = NULL;
+    if(isAsyn == TRUE) {
+        context = (AsynContext*)malloc(sizeof(AsynContext));
+        if(context == NULL) {
+            return NULL;
+        }
+        context->runtimeActions = NULL;
+    }
+    return context;
+}
+
+Context* initContext(ActionDesc* actions, int actionNum) {
+    MEM_GUARD(5);
+    STRUCT_ALLOC(Context, context);
+    CHECK_PTR_R(context, NULL);
     BOOL isAsyn = FALSE;
     uint32_t length = initLength(&context->map, actions, actionNum, &isAsyn);
 
+    context->asynContext = initAsynContext(isAsyn);
     if(isAsyn == TRUE) {
-        context->asynContext = (AsynContext*)malloc(sizeof(AsynContext));
-        if(context->data == NULL) return FALSE;
-        context->asynContext->runtimeActions = NULL;
-    } else {
-        context->asynContext = NULL;
+        CHECK_PTR_R(context->asynContext , NULL);
     }
 
-    char* data = malloc(length);
-    if(context->data == NULL) return FALSE;
-    memset(data, 0, sizeof(length));
+    context->data = malloc(length);
+    CHECK_PTR_R(context->data , NULL);
 
-    context->data = data;
+    memset(context->data , 0, sizeof(length));
     context->castTo = castTo;
 
     BOOL ret = initRollBackCtxt(&context->rollbackData, actionNum);
-    if(ret == FALSE) {
-        free(context->data);
-        return ret;
-    }
-    return TRUE;
+    CHECK_BOOL_R(ret == FALSE, NULL);
+
+    return context;
 }
 
 void destroyContext(Context* context) {
-    free(context->data);
-    if(context->rollbackData.contexts) free(context->rollbackData.contexts);
+    CHECK_FREE(context->data);
+    CHECK_FREE(context->rollbackData.contexts);
     if(context->asynContext) {
-        if(context->asynContext->runtimeActions) {
-            free(context->asynContext->runtimeActions);
-        }
+        CHECK_FREE(context->asynContext->runtimeActions);
         free(context->asynContext);
     }
-    free(context->map.hash);
+    CHECK_FREE(context->map.hash);
+    CHECK_FREE(context);
 }

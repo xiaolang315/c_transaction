@@ -26,17 +26,14 @@ static BOOL initRuntimeActions(AsynContext* context, ActionDesc* actions, uint32
 }
 
 TransResult asynStart(const Transaction* trans, Context** outContext) {
-    Context* context = (Context*)malloc(sizeof(Context));
-    if(context == NULL) return TransFail;
-
-    BOOL ret = initContext(context, trans->actions, trans->actionNum);
-    if(ret == FALSE) {
+    Context* context = initContext(trans->actions, trans->actionNum);
+    if(context == NULL) {
         destroyContext(context);
         return TransFail;
     }
     *outContext = context;
 
-    ret = initRuntimeActions(context->asynContext, trans->actions, trans->actionNum);
+    BOOL ret = initRuntimeActions(context->asynContext, trans->actions, trans->actionNum);
     if(ret == FALSE) {
         destroyContext(context);
         return TransFail;
@@ -86,19 +83,15 @@ static TransResult asynExecInAction(Context* context, Context* parent)
 TransResult asynActionStart(Context* parentContext, PrepareChildCtxtFunc prepare, Transaction* trans){
     Context** subContext = &parentContext->asynContext->current.context;
     if (*subContext == NULL) {
-
-        Context* childContext = (Context*)malloc(sizeof(Context));
-        if(childContext == NULL) return TransFail;
-
-        BOOL ret = initContext(childContext, trans->actions, trans->actionNum);
-        if(ret == FALSE) {
+        Context* childContext = initContext(trans->actions, trans->actionNum);
+        if(childContext == NULL) {
             destroyContext(childContext);
             return TransFail;
         }
         prepare(childContext, *subContext);
         *subContext = childContext;
 
-        ret = initRuntimeActions(childContext->asynContext, trans->actions, trans->actionNum);
+        BOOL ret = initRuntimeActions(childContext->asynContext, trans->actions, trans->actionNum);
         if(ret == FALSE) {
             destroyContext(childContext);
             return TransFail;

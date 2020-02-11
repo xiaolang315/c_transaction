@@ -72,7 +72,7 @@ struct name
 BOOL AddRollBack(RollbackContext* , RollBackAction, const RollbackData*);
 
 FWD_DECL(ActionDesc);
-BOOL initContext(Context* context, ActionDesc*, int actionNum) ;
+Context* initContext(ActionDesc* actions, int actionNum);
 void destroyContext(Context* context) ;
 
 EXTERN_STDC_END
