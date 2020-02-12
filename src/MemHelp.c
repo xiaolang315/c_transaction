@@ -5,9 +5,9 @@
 #include "MemHelp.h"
 #include "Foreach.h"
 
-void freeAll(void* buff, uint32_t num){
-    FOREACH(void, var, buff, num)
-        free(var);
+void freeAll(void** buff, uint32_t num){
+    FOREACH(void*, var, buff, num)
+        free(*var);
     FOREACH_END()
 }
 

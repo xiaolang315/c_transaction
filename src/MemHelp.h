@@ -6,29 +6,39 @@
 #define C_TRANSACTION_MEMHELP_H
 
 #include <stdlib.h>
+#include "ExternC.h"
+
+EXTERN_STDC_BEGIN
 
 #define STRUCT_ALLOC(type, var)\
 type* var = (type*)malloc(sizeof(type));
 
+#define ARRAY_ALLOC(type, var, num)\
+var = (type*)malloc(sizeof(type) * num);
 
 #define  MEM_GUARD(n);\
 typedef struct MemGuard {\
     void* buff[n];\
-    int num;\
-}MemGuard; MemGuard mem_guard ;\
+    uint32_t num;\
+}MemGuard; MemGuard mem_guard ; const uint32_t max = n;\
 mem_guard.num = 0;
 
-void freeAll(void* buff, uint32_t num);
 
-#define CHECK_BOOL_R(cond,  ret)\
-if(cond) {\
-    freeAll(mem_guard.buff, mem_guard.num);\
-    return ret;\
+void freeAll(void** buff, uint32_t num);
+
+//define this macro for test replace
+#define FREE_ALL(buffs, num) freeAll(buffs, num)
+
+#define CHECK_PTR(ptr)\
+if(ptr == NULL || mem_guard.num >= max) {\
+   FREE_ALL(mem_guard.buff, mem_guard.num);\
+} else {\
+   mem_guard.buff[mem_guard.num++] = ptr;\
 }
 
 #define CHECK_PTR_R(ptr, ret)\
-if(ptr == NULL) {\
-    freeAll(mem_guard.buff, mem_guard.num);\
+if(ptr == NULL || mem_guard.num >= max) {\
+    FREE_ALL(mem_guard.buff, mem_guard.num);\
     return ret;\
 } else {\
    mem_guard.buff[mem_guard.num++] = ptr;\
@@ -37,5 +47,7 @@ if(ptr == NULL) {\
 #define CHECK_FREE(ptr)\
 if(ptr != NULL) free(ptr)
 
+
+EXTERN_STDC_END
 
 #endif //C_TRANSACTION_MEMHELP_H
