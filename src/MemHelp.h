@@ -5,16 +5,16 @@
 #ifndef C_TRANSACTION_MEMHELP_H
 #define C_TRANSACTION_MEMHELP_H
 
-#include <stdlib.h>
 #include "ExternC.h"
+#include "MemManager.h"
 
 EXTERN_STDC_BEGIN
 
 #define STRUCT_ALLOC(type, var)\
-type* var = (type*)malloc(sizeof(type));
+type* var = (type*)mallocTc(sizeof(type));
 
 #define ARRAY_ALLOC(type, var, num)\
-var = (type*)malloc(sizeof(type) * num);
+var = (type*)mallocTc(sizeof(type) * num);
 
 #define  MEM_GUARD(n);\
 typedef struct MemGuard {\
@@ -22,7 +22,6 @@ typedef struct MemGuard {\
     uint32_t num;\
 }MemGuard; MemGuard mem_guard ; const uint32_t max = n;\
 mem_guard.num = 0;
-
 
 void freeAll(void** buff, uint32_t num);
 
@@ -45,7 +44,7 @@ if(ptr == NULL || mem_guard.num >= max) {\
 }
 
 #define CHECK_FREE(ptr)\
-if(ptr != NULL) free(ptr)
+if(ptr != NULL) freeTc(ptr)
 
 
 EXTERN_STDC_END

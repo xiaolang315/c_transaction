@@ -58,5 +58,53 @@ TEST(MemGuardTest , mem_guard_can_record_mem_after_check) {
 
 
     mock().expectOneCall("freeDemo").withParameter("num", 2);
-    CHECK_PTR(NULL);
+    CHECK_PTR(NULL);//check fail trigger free all
+}
+
+TEST_GROUP(MemControl) {
+
+    TEST_TEARDOWN(){
+        defaultMemoryControl();
+    }
+};
+
+TEST(MemControl, should_alloc_succ_with_right_size_from_static_mem) {
+    void* buff[1000];
+    memoryControl(buff, 1000);
+    void* buff1 = mallocTc(100);
+    CHECK_TRUE(buff1 != NULL);
+
+    void* buff2 = mallocTc(1000);
+    CHECK_EQUAL(buff2, NULL);
+
+    void* buff3 = mallocTc(100);
+    CHECK_TRUE(buff3 != NULL);
+
+    freeTc(buff1);
+    CHECK_EQUAL(checkMemLeaksPos(), buff3);
+
+    freeTc(buff3);
+    CHECK_EQUAL(checkMemLeaksPos(), NULL);
+}
+
+TEST(MemControl, should_alloc_succ_when_free_enough_size_after_mem_empty) {
+    void* buff[1000];
+    memoryControl(buff, 1000);
+    void* buff1 = mallocTc(500);
+    CHECK_TRUE(buff1 != NULL);
+
+    void* buff2 = mallocTc(500);
+    CHECK_TRUE(buff2 != NULL);
+
+    void* buff3 = mallocTc(500);
+    CHECK_EQUAL(buff3, NULL);
+
+    freeTc(buff1);
+
+    buff3 =mallocTc(500);
+    CHECK_TRUE(buff3 != NULL);
+
+    freeTc(buff2);
+    freeTc(buff3);
+    CHECK_EQUAL(checkMemLeaksPos(), NULL);
 }

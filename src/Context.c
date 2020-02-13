@@ -39,7 +39,7 @@ BOOL AddRollBack(RollbackContext* context, RollBackAction action, const Rollback
 
     RollbackData* toData = &context->contexts[context->num].data;
 
-    toData->mem = malloc(data->len);
+    toData->mem = mallocTc(data->len);
     if(toData->mem == NULL) return FALSE;
 
     memcpy(toData->mem, data->mem, data->len);
@@ -102,7 +102,7 @@ Context* initContext(ActionDesc* actions, uint32_t actionNum) {
     CHECK_PTR_R(context->map.hash , NULL);
 
     uint32_t length = initLength(&context->map, actions, actionNum);
-    context->data = malloc(length);
+    context->data = mallocTc(length);
     CHECK_PTR_R(context->data , NULL);
 
     ARRAY_ALLOC(OneRollBackContext, context->rollbackData.contexts , actionNum);
@@ -118,7 +118,7 @@ void destroyContext(Context* context) {
     CHECK_FREE(context->rollbackData.contexts);
     if(context->asynContext) {
         CHECK_FREE(context->asynContext->runtimeActions);
-        free(context->asynContext);
+        freeTc(context->asynContext);
     }
     CHECK_FREE(context->map.hash);
     CHECK_FREE(context);

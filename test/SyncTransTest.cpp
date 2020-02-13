@@ -25,7 +25,7 @@ namespace {
         return ActionOk;
     }
 
-    ACTION_DEF(SimpleAsynAction, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
+    ACTION_DEF(SimpleSyncAction, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
         CAST_TO(SimpleStruct, s);
         s->x = 1;
         return ActionOk;
@@ -54,11 +54,10 @@ namespace {
         }
     };
 
-
     TEST(TransactionTest, exec_one_action) {
         mock().expectOneCall("SimpleActionCheck").ignoreOtherParameters();
         TRANS(trans,
-              ACTIONS(SimpleAsynAction
+              ACTIONS(SimpleSyncAction
                       , SimpleAction2
                       , SimpleActionCheck
               )
@@ -71,7 +70,7 @@ namespace {
     TEST(TransactionTest, exec_one_failed_action_stop_trans) {
         mock().expectNoCall("SimpleActionCheck");
         TRANS(trans,
-                ACTIONS(SimpleAsynAction
+                ACTIONS(SimpleSyncAction
                         , SimpleFailAction
                         , SimpleActionCheck
                 )
@@ -103,7 +102,7 @@ namespace {
     TEST(TransactionTest, exec_one_failed_action_roll_back) {
         mock().expectOneCall("RollBackDemo").withParameter("x", Expect_X);
         TRANS(trans,
-                ACTIONS(SimpleAsynAction
+                ACTIONS(SimpleSyncAction
                         , SimpleActionRollbackCheck
                         , SimpleFailAction
                 )
@@ -115,7 +114,7 @@ namespace {
 
 
     SYNC_SUB_TRANS(SubSimpleAction,
-                   ACTIONS(SimpleAsynAction
+                   ACTIONS(SimpleSyncAction
                             , SimpleActionRollbackCheck
                             , SimpleFailAction
               )
@@ -125,7 +124,7 @@ namespace {
     TEST(TransactionTest, sub_proc_failed_action_roll_back_do_not_effect_main_proc) {
         mock().expectOneCall("RollBackDemo").ignoreOtherParameters();
         TRANS(trans,
-                ACTIONS(SimpleAsynAction
+                ACTIONS(SimpleSyncAction
                                , SubSimpleAction
                 )
         )
@@ -134,8 +133,8 @@ namespace {
         mock().checkExpectations();
     }
 
-    SYNC_SUB_TRANS(SubSimpleActionSucc,
-                   ACTIONS(SimpleAsynAction
+    SYNC_SUB_TRANS(SubTransSucc,
+                   ACTIONS(SimpleSyncAction
                       , SimpleActionRollbackCheck
               )
     )
@@ -143,8 +142,8 @@ namespace {
     TEST(TransactionTest, sub_trans_succ_but_main_trans_fail_also_need_roll_back) {
         mock().expectOneCall("RollBackDemo").ignoreOtherParameters();
         TRANS(trans,
-                ACTIONS(SimpleAsynAction
-                , SubSimpleActionSucc
+                ACTIONS(SimpleSyncAction
+                , SubTransSucc
                 , SimpleFailAction
                 )
         )
@@ -153,15 +152,34 @@ namespace {
         mock().checkExpectations();
     }
 
+    SYNC_SUB_TRANS(SubTransSuccLevel2,
+                   ACTIONS(SimpleSyncAction
+                           , SubTransSucc
+                   )
+    )
+
+    TEST(TransactionTest, sub_trans_succ_but_main_trans_fail_also_need_roll_back_three_deepth) {
+        mock().expectOneCall("RollBackDemo").ignoreOtherParameters();
+        TRANS(trans,
+              ACTIONS(SimpleSyncAction
+                      , SubTransSuccLevel2
+                      , SimpleFailAction
+              )
+        )
+        TransResult ret = syncExec(&trans);
+        CHECK_EQUAL(ret, TransFail);
+        mock().checkExpectations();
+    }
+
     SYNC_SUB_TRANS_UP(SubSimpleActionFail,
-                      ACTIONS(SimpleAsynAction
+                      ACTIONS(SimpleSyncAction
                       , SimpleFailAction
               )
     )
 
-    TEST(TransactionTest, sub_trans_fail_main_trans_fail) {
+    TEST(TransactionTest, upgrade_sub_trans_fail_cause_main_trans_fail) {
         TRANS(trans,
-              ACTIONS(SimpleAsynAction
+              ACTIONS(SimpleSyncAction
                       , SubSimpleActionFail
               )
         )

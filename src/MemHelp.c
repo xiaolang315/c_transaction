@@ -7,7 +7,7 @@
 
 void freeAll(void** buff, uint32_t num){
     FOREACH(void*, var, buff, num)
-        free(*var);
+        freeTc(*var);
     FOREACH_END()
 }
 
