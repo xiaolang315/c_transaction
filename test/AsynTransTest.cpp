@@ -2,39 +2,59 @@
 #include "CppUTestExt/MockSupport.h"
 #include "Context.h"
 #include "AsynTransaction.h"
+#include "MemManager.h"
 
 DEF_CTXT(Simple1) {
     int x;
 };
 
-TEST_GROUP(AsynTransTest) {
-    void teardown()
-    {
-        mock().clear();
+struct AutoCheck {
+    AutoCheck(){
+        static char buff[10000] ;
+        memoryControl(buff, ARRAY_SIZE(buff));
+    }
+    ~AutoCheck(){
+        CHECK_EQUAL(NULL, checkMemLeaksPos());
+        defaultMemoryControl();
     }
 };
 
-ASYN_ACTION_DEF(SimpleAsynAction, STRUCTS(DEF_ACTION_CTXT(Simple1)))(Context* context) {
+TEST_GROUP(AsynTransTest) {
+
+    TEST_TEARDOWN() {
+        mock().clear();
+    }
+
+    AutoCheck check;
+};
+
+ASYN_ACTION_DEF(InitAction, STRUCTS(DEF_ACTION_CTXT(Simple1)))(Context *context) {
     CAST_TO(Simple1, s);
-    if(s->x == 1) return ActionOk;
+    s->x = 0;
+    return ActionOk;
+}
+
+
+ASYN_ACTION_DEF(SimpleAsynAction, STRUCTS(DEF_ACTION_CTXT(Simple1)))(Context *context) {
+    CAST_TO(Simple1, s);
+    if (s->x == 1) return ActionOk;
     s->x = 1;
     return ActionContinue;
 }
 
-NULL_CTXT_SYNC_ACTION_DEF(SimpleActionCheck)(Context* ) {
+NULL_CTXT_SYNC_ACTION_DEF(SimpleActionCheck)(Context *) {
     mock().actualCall("SimpleActionCheck");
     return ActionOk;
 }
 
 TEST(AsynTransTest, start_a_asyn_trans) {
     TRANS(trans,
-          ACTIONS(SimpleAsynAction
-                  , SimpleActionCheck
+          ACTIONS(InitAction, SimpleAsynAction, SimpleActionCheck
           )
     )
 
     mock().expectNoCall("SimpleActionCheck");
-    Context* context;
+    Context *context;
     TransResult ret = asynStart(&trans, &context);
     CHECK_EQUAL(ret, TransContinue);
     mock().checkExpectations();
@@ -46,17 +66,15 @@ TEST(AsynTransTest, start_a_asyn_trans) {
     mock().checkExpectations();
 }
 
-ASYN_SUB_TRANS(sub, ACTIONS(SimpleAsynAction, SimpleActionCheck))
+ASYN_SUB_TRANS(sub, ACTIONS(InitAction, SimpleAsynAction, SimpleActionCheck))
 
 TEST(AsynTransTest, start_a_asyn_trans_with_subtruns) {
-
     TRANS(trans,
-          ACTIONS(SimpleAsynAction
-                  , sub
+          ACTIONS(InitAction, SimpleAsynAction, sub
           )
     )
 
-    Context* context;
+    Context *context;
     TransResult ret = asynStart(&trans, &context);
     CHECK_EQUAL(ret, TransContinue);
 
@@ -70,7 +88,7 @@ TEST(AsynTransTest, start_a_asyn_trans_with_subtruns) {
     mock().checkExpectations();
 }
 
-void RollBackActionDemo(RollbackData*){
+void RollBackActionDemo(RollbackData *) {
     mock().actualCall("RollBackDemo");
 }
 
@@ -78,26 +96,25 @@ struct RollbackStruct {
     int x;
 };
 
-NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
-    RollbackStruct s ;
+NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context *context) {
+    RollbackStruct s;
     RollbackData data = {&s, sizeof(s)};
     AddRollBack(&context->rollbackData, RollBackActionDemo, &data);
     return ActionOk;
 }
 
-NULL_CTXT_SYNC_ACTION_DEF(FailAction)(Context* ) {
+NULL_CTXT_SYNC_ACTION_DEF(FailAction)(Context *) {
     return ActionErr;
 }
 
 TEST(AsynTransTest, asyn_trans_can_rollback) {
+    AutoCheck autoCheck;
     TRANS(trans,
-          ACTIONS(SimpleAsynAction
-                  , SimpleActionRollbackCheck
-                  , FailAction
+          ACTIONS(InitAction, SimpleAsynAction, SimpleActionRollbackCheck, FailAction
           )
     )
 
-    Context* context;
+    Context *context;
     TransResult ret = asynStart(&trans, &context);
     CHECK_EQUAL(ret, TransContinue);
 
@@ -108,17 +125,15 @@ TEST(AsynTransTest, asyn_trans_can_rollback) {
     mock().checkExpectations();
 }
 
-ASYN_SUB_TRANS(SubSuccTrans, ACTIONS(SimpleAsynAction, SimpleActionRollbackCheck))
+ASYN_SUB_TRANS(SubSuccTrans, ACTIONS(InitAction, SimpleAsynAction, SimpleActionRollbackCheck))
 
 TEST(AsynTransTest, asyn_trans_can_rollback_action_in_sub_trans) {
     TRANS(trans,
-          ACTIONS(SimpleAsynAction
-                  , SubSuccTrans
-                  , FailAction
+          ACTIONS(InitAction, SimpleAsynAction, SubSuccTrans, FailAction
           )
     )
 
-    Context* context;
+    Context *context;
     TransResult ret = asynStart(&trans, &context);
     CHECK_EQUAL(ret, TransContinue);
 

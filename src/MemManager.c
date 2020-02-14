@@ -29,8 +29,9 @@ void defaultMemoryControl() {
     freeFunc = free;
     leftSize = 0;
     lastPos = NULL;
-    firstPos.next = NULL;
-    firstPos.ptr = NULL;
+    firstPos.next =  NULL;
+    reuseFirstMem = NULL;
+    reuseLastMem = NULL;
 }
 
 struct MemNode* reUseFetch(uint32_t size) {
@@ -71,7 +72,7 @@ void* staticMalloc(size_t __size) {
         if(leftSize < __size) return NULL;
         currentNode = malloc(sizeof(MemNode));
         if(currentNode == NULL) return NULL;
-        currentNode->ptr = lastPos->ptr + __size;
+        currentNode->ptr = lastPos->ptr + lastPos->size;
         currentNode->size = __size;
         leftSize -= __size;
     }
@@ -93,6 +94,8 @@ void  staticFree(void * ptr) {
         last = node;
         node = node->next;
     }while (node);
+    int x = 0;
+    x++;
 }
 
 void* checkMemLeaksPos() {
@@ -107,6 +110,7 @@ void memoryControl(void* buff, uint32_t size) {
     staticSize = size;
     firstPos.ptr = buff;
     firstPos.next = NULL;
+    firstPos.size = 0;
     leftSize = size;
     lastPos = &firstPos;
     reuseFirstMem = NULL;

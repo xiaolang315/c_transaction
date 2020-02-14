@@ -5,10 +5,11 @@
 #include "Context.h"
 #include "Foreach.h"
 #include <stdlib.h>
+#include "MemHelp.h"
 
 static BOOL initRuntimeActions(AsynContext* context, ActionDesc* actions, uint32_t actionNum){
-
-    RuntimeAction* runtimeAction = (RuntimeAction*)malloc(actionNum * sizeof(RuntimeAction));
+    RuntimeAction* runtimeAction = NULL;
+    ARRAY_ALLOC(RuntimeAction, runtimeAction, actionNum);
     if(runtimeAction == NULL) return FALSE;
 
     RuntimeAction* current = &context->current;

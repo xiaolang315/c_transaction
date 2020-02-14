@@ -44,7 +44,7 @@ if(ptr == NULL || mem_guard.num >= max) {\
 }
 
 #define CHECK_FREE(ptr)\
-if(ptr != NULL) freeTc(ptr)
+if(ptr != NULL) {freeTc(ptr); ptr = NULL;}
 
 
 EXTERN_STDC_END

@@ -113,12 +113,21 @@ Context* initContext(ActionDesc* actions, uint32_t actionNum) {
     return context;
 }
 
+void destroyRollbackData(RollbackContext* data) {
+    CHECK_FREE(data->contexts);
+    if(data->next) {
+        destroyRollbackData(data->next);
+        freeTc(data->next);
+    }
+}
+
 void destroyContext(Context* context) {
     CHECK_FREE(context->data);
-    CHECK_FREE(context->rollbackData.contexts);
-    if(context->asynContext) {
+    destroyRollbackData(&context->rollbackData);
+    if(context->asynContext != NULL) {
         CHECK_FREE(context->asynContext->runtimeActions);
         freeTc(context->asynContext);
+        context->asynContext = NULL;
     }
     CHECK_FREE(context->map.hash);
     CHECK_FREE(context);

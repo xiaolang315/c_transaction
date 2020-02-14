@@ -3,6 +3,7 @@
 #include "CppUTestExt/MockSupport.h"
 #include "SyncTransaction.h"
 #include "Context.h"
+#include "MemManager.h"
 
 namespace {
     DEF_CTXT(SimpleStruct){
@@ -48,9 +49,16 @@ namespace {
     }
 
     TEST_GROUP(TransactionTest){
-        void teardown()
+        TEST_SETUP() {
+            static char buff[10000] ;
+            memoryControl(buff, ARRAY_SIZE(buff));
+        }
+
+        TEST_TEARDOWN()
         {
             mock().clear();
+            CHECK_EQUAL(NULL, checkMemLeaksPos());
+            defaultMemoryControl();
         }
     };
 

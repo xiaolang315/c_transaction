@@ -5,6 +5,7 @@
 #include "Transaction.h"
 #include "Foreach.h"
 #include "stdlib.h"
+#include "MemHelp.h"
 
 ActionResult toActionResult(TransResult ret) {
     switch(ret){
@@ -16,10 +17,11 @@ ActionResult toActionResult(TransResult ret) {
 }
 
 void upToParent(Context* parent, Context* child) {
-    RollbackContext* next = (RollbackContext*)malloc(sizeof(RollbackContext));
+    RollbackContext* next = (RollbackContext*)mallocTc(sizeof(RollbackContext));
     *next = child->rollbackData;
     parent->rollbackData.next = next;
     child->rollbackData.contexts = NULL;
+    child->rollbackData.next = NULL;
 }
 
 
@@ -32,10 +34,11 @@ void NoPrepareChildCtxtFunc(const Context* parent, Context* child){
 void rollback(RollbackContext* context) {
     FOREACH(OneRollBackContext, ctxt, context->contexts, context->num)
         ctxt->action(&ctxt->data);
-        free(ctxt->data.mem);
+        CHECK_FREE(ctxt->data.mem);
     FOREACH_END()
+    CHECK_FREE(context->contexts);
     if(context->next) {
         rollback(context->next);
-        free((context->next));
+        CHECK_FREE((context->next));
     }
 }
