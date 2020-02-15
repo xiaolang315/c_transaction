@@ -6,19 +6,24 @@
 #include "MemHelp.h"
 
 TEST_GROUP(MemGuardTest) {
+    TEST_SETUP() {
+        static char static_buff[1000];
+        memoryControl(static_buff, 1000);
+    }
     TEST_TEARDOWN(){
         mock().clear();
+        defaultMemoryControl();
     }
 };
 
 bool fooFunc() {
     MEM_GUARD(1)
 
-    void* buff = malloc(100);
+    void* buff = mallocTc(100);
     CHECK_PTR_R(buff, false);
 
     mock().actualCall("malloc1");
-    void* buff1 = malloc(100);
+    void* buff1 = mallocTc(100);
     CHECK_PTR_R(buff1, false);
 
     mock().actualCall("malloc2");
@@ -45,13 +50,13 @@ TEST(MemGuardTest , mem_guard_can_record_mem_after_check) {
 
     MEM_GUARD(2)
 
-    void* buff = malloc(100);
+    void* buff = mallocTc(100);
     CHECK_PTR(buff);
 
     CHECK_EQUAL(mem_guard.num, 1);
     CHECK_EQUAL(mem_guard.buff[0], buff);
 
-    void* buff1 = malloc(100);
+    void* buff1 = mallocTc(100);
     CHECK_PTR(buff1);
     CHECK_EQUAL(mem_guard.num, 2);
     CHECK_EQUAL(mem_guard.buff[1], buff1);
@@ -59,6 +64,8 @@ TEST(MemGuardTest , mem_guard_can_record_mem_after_check) {
 
     mock().expectOneCall("freeDemo").withParameter("num", 2);
     CHECK_PTR(NULL);//check fail trigger free all
+
+    CHECK_EQUAL(NULL, checkMemLeaksPos());
 }
 
 TEST_GROUP(MemControl) {
@@ -69,6 +76,7 @@ TEST_GROUP(MemControl) {
 };
 
 TEST(MemControl, should_alloc_succ_with_right_size_from_static_mem) {
+
     void* buff[1000];
     memoryControl(buff, 1000);
     void* buff1 = mallocTc(100);
@@ -90,18 +98,18 @@ TEST(MemControl, should_alloc_succ_with_right_size_from_static_mem) {
 TEST(MemControl, should_alloc_succ_when_free_enough_size_after_mem_empty) {
     void* buff[1000];
     memoryControl(buff, 1000);
-    void* buff1 = mallocTc(500);
+    void* buff1 = mallocTc(400);
     CHECK_TRUE(buff1 != NULL);
 
-    void* buff2 = mallocTc(500);
+    void* buff2 = mallocTc(400);
     CHECK_TRUE(buff2 != NULL);
 
-    void* buff3 = mallocTc(500);
+    void* buff3 = mallocTc(400);
     CHECK_EQUAL(buff3, NULL);
 
     freeTc(buff1);
 
-    buff3 =mallocTc(500);
+    buff3 =mallocTc(400);
     CHECK_TRUE(buff3 != NULL);
 
     freeTc(buff2);

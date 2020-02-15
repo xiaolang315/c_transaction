@@ -3,13 +3,13 @@
 //
 #include <stdlib.h>
 #include "MemHelp.h"
+#include "BaseType.h"
 
 typedef void* (*MallocFunc)(size_t __size);
 typedef void  (*FreeFunc)(void *);
 
 MallocFunc mallocFunc = malloc;
 FreeFunc freeFunc = free;
-uint32_t staticSize = 0;
 uint32_t leftSize = 0;
 
 typedef struct MemNode {
@@ -18,35 +18,47 @@ typedef struct MemNode {
     struct MemNode* next;
 } MemNode;
 
-MemNode* lastPos;
-MemNode firstPos;
+typedef struct MemNodeList {
+    MemNode* first;
+    MemNode* last;
+} MemNodeList;
 
-MemNode* reuseFirstMem;
-MemNode* reuseLastMem;
+MemNode firstMem;
+MemNodeList memPos;
+MemNodeList reuse;
 
-void defaultMemoryControl() {
-    mallocFunc = malloc;
-    freeFunc = free;
-    leftSize = 0;
-    lastPos = NULL;
-    firstPos.next =  NULL;
-    reuseFirstMem = NULL;
-    reuseLastMem = NULL;
+void init(MemNodeList* list) {
+   list->first = NULL;
+   list->last = NULL;
 }
 
-struct MemNode* reUseFetch(uint32_t size) {
-    if(reuseFirstMem == NULL) return NULL;
-    if(reuseFirstMem->size >= size) {
-        MemNode* out = reuseFirstMem;
-        reuseFirstMem = reuseFirstMem->next;
+void push_back(MemNodeList* list, MemNode* node) {
+    if(list->first == NULL) {
+        list->first = node;
+    } else {
+        list->last->next = node;
+    }
+    list->last = node;
+}
+
+typedef BOOL (*CompareFunc)(const MemNode*, const MemNode*);
+
+struct MemNode* fetch(MemNodeList* list, const MemNode* matchNode, CompareFunc compare) {
+    if(list->first == NULL) return NULL;
+    if(compare(list->first, matchNode) == TRUE) {
+        MemNode* out = list->first;
+        list->first = list->first->next;
         return out;
     }
-    MemNode* node = reuseFirstMem->next;
-    MemNode* last = reuseFirstMem;
+    MemNode* node = list->first->next;
+    MemNode* last = list->first;
     while(node != NULL) {
-        if (node->size >= size) {
+        if (compare(node, matchNode) == TRUE) {
             MemNode* out = node;
             last->next = node->next;
+            if(node == list->last) {
+                list->last = last;
+            }
             return out;
         } else {
             last = node;
@@ -56,65 +68,78 @@ struct MemNode* reUseFetch(uint32_t size) {
     return NULL;
 }
 
-void reUsePush(struct MemNode* memNode) {
-    memNode->next = NULL;
-    if(reuseFirstMem == NULL) {
-        reuseFirstMem = memNode;
-        reuseLastMem = reuseFirstMem;
-        return;
-    }
-    reuseLastMem->next = memNode;
+void defaultMemoryControl() {
+    mallocFunc = malloc;
+    freeFunc = free;
+    leftSize = 0;
+    init(&reuse);
+    init(&memPos);
+}
+
+BOOL memSizeMatcher (const MemNode* var, const MemNode* match) {
+    return var->size >= match->size ? TRUE: FALSE;
+}
+
+struct MemNode* reUseFetch(uint32_t size) {
+    MemNode matcher = {NULL, size, NULL};
+    return fetch(&reuse, &matcher, memSizeMatcher);
+
+}
+
+static size_t withMemNode(size_t size) {
+   return size + sizeof(MemNode) ;
+}
+
+static MemNode* doAllocNewMem(size_t needSize, size_t allocSize) {
+    char* newPtr =  memPos.last->ptr + memPos.last->size;
+    MemNode* currentNode = (MemNode*)(newPtr + allocSize );
+    currentNode->ptr = newPtr;
+    currentNode->size = needSize;
+    leftSize -= needSize;
+    return currentNode;
 }
 
 void* staticMalloc(size_t __size) {
-    MemNode* currentNode = reUseFetch(__size);
+    size_t needSize = withMemNode(__size);
+    MemNode* currentNode = reUseFetch(needSize);
     if(currentNode == NULL) {
-        if(leftSize < __size) return NULL;
-        currentNode = malloc(sizeof(MemNode));
-        if(currentNode == NULL) return NULL;
-        currentNode->ptr = lastPos->ptr + lastPos->size;
-        currentNode->size = __size;
-        leftSize -= __size;
+        if(leftSize < needSize ) return NULL;
+        currentNode = doAllocNewMem(needSize, __size);
     }
     currentNode->next = NULL;
-    lastPos->next = currentNode;
-    lastPos = currentNode;
+    push_back(&memPos, currentNode);
     return currentNode->ptr;
 }
 
+BOOL ptrMatcher (const MemNode* var, const MemNode* match) {
+    return var->ptr == match->ptr? TRUE: FALSE;
+}
+
+
 void  staticFree(void * ptr) {
-    MemNode* node = firstPos.next;
-    MemNode* last = &firstPos;
-    do {
-        if(ptr == node->ptr) {
-            last->next = node->next;
-            reUsePush(node);
-            break;
-        }
-        last = node;
-        node = node->next;
-    }while (node);
-    int x = 0;
-    x++;
+    MemNode matchNode = {ptr, 0, NULL};
+    MemNode* toBeFree = fetch(&memPos, &matchNode, ptrMatcher);
+    toBeFree->next = NULL;
+    push_back(&reuse, toBeFree);
 }
 
 void* checkMemLeaksPos() {
-    if(firstPos.next != NULL)
-        return firstPos.next->ptr;
+    if(memPos.first != NULL) {
+        return  memPos.first->ptr;
+    }
     return NULL;
 }
+
 
 void memoryControl(void* buff, uint32_t size) {
     mallocFunc = staticMalloc;
     freeFunc = staticFree;
-    staticSize = size;
-    firstPos.ptr = buff;
-    firstPos.next = NULL;
-    firstPos.size = 0;
     leftSize = size;
-    lastPos = &firstPos;
-    reuseFirstMem = NULL;
-    reuseLastMem = NULL;
+    init(&reuse);
+    init(&memPos);
+    memPos.last = &firstMem;
+    memPos.last->ptr = buff;
+    memPos.last->size = 0;
 }
 
 void* mallocTc(uint32_t size) {
