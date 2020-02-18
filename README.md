@@ -4,6 +4,7 @@ pure C transaction frame, can solve most transaction issue;
 
 ## todo feature：
 * more test case
+* memcheck when use heap mem
 * try unify asyn and sync 
 
 ## support feature

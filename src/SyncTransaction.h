@@ -11,9 +11,7 @@ ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc, const
 
 #define SYNC_SUB_TRANS(name, actions)\
     ActionDesc name##_actions[] = actions;\
-    ActionResult name##func(Context* context);\
-    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
-    ActionResult name##func(Context* context) {\
+    SUB_TRANS(name){\
         Transaction trans = TRANSACTION_DEF(name##_actions);\
         syncSubTransActionExec(context, NoPrepareChildCtxtFunc, &trans);\
         return ActionOk;\
@@ -21,9 +19,7 @@ ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc, const
 
 #define SYNC_SUB_TRANS_UP(name, actions)\
     ActionDesc name##_actions[] = actions;\
-    ActionResult name##func(Context* context);\
-    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
-    ActionResult name##func(Context* context) {\
+    SUB_TRANS(name){\
         Transaction trans = TRANSACTION_DEF(name##_actions);\
         return syncSubTransActionExec(context, NoPrepareChildCtxtFunc, &trans);\
     }

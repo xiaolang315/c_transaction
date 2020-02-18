@@ -11,11 +11,11 @@ DEF_CTXT(Simple1) {
 struct AutoCheck {
     AutoCheck(){
         static char buff[10000] ;
-        memoryControl(buff, ARRAY_SIZE(buff));
+        useStaticMemory(buff, ARRAY_SIZE(buff));
     }
     ~AutoCheck(){
         CHECK_EQUAL(NULL, checkMemLeaksPos());
-        defaultMemoryControl();
+        useHeapMemory();
     }
 };
 

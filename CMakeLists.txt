@@ -7,7 +7,6 @@ set(CMAKE_CXX_COMPILER /usr/bin/g++)
 set(CMAKE_CXX_STANDARD 14)
 
 include_directories(
-    "/Users/zhangchao/code/googletest/googletest/include/"
         "/usr/local/include"
     "src/"
 )
@@ -20,7 +19,6 @@ test/*.cpp
 
 link_directories(
     "/usr/local/lib"
-    "/Users/zhangchao/code/googletest/googletest/build/lib/"
 )
 
 add_executable(c_transaction  ${all_files})

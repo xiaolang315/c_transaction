@@ -51,14 +51,14 @@ namespace {
     TEST_GROUP(TransactionTest){
         TEST_SETUP() {
             static char buff[10000] ;
-            memoryControl(buff, ARRAY_SIZE(buff));
+            useStaticMemory(buff, ARRAY_SIZE(buff));
         }
 
         TEST_TEARDOWN()
         {
             mock().clear();
             CHECK_EQUAL(NULL, checkMemLeaksPos());
-            defaultMemoryControl();
+            useHeapMemory();
         }
     };
 

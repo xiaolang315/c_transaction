@@ -10,6 +10,7 @@ void init(BaseList* list) {
 }
 
 void push_back(BaseList* list, ListNode* node) {
+    node->next = NULL;
     if(list->first == NULL) {
         list->first = node;
     } else {
@@ -41,4 +42,8 @@ ListNode* fetch(BaseList* list, const ListNode* matchNode, CompareFunc compare) 
         }
     }
     return NULL;
+}
+
+BOOL empty(const BaseList* list) {
+    return list->first == NULL? TRUE:FALSE;
 }

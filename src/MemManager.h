@@ -10,8 +10,9 @@
 
 EXTERN_STDC_BEGIN
 //if you want use your local static global mem, tell me use this function
-void memoryControl(void* buff, uint32_t size);
-void defaultMemoryControl();
+
+void useStaticMemory(void* buff, uint32_t size);
+void useHeapMemory();
 
 void* checkMemLeaksPos();
 

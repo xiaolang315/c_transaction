@@ -8,11 +8,11 @@
 TEST_GROUP(MemGuardTest) {
     TEST_SETUP() {
         static char static_buff[1000];
-        memoryControl(static_buff, 1000);
+        useStaticMemory(static_buff, 1000);
     }
     TEST_TEARDOWN(){
         mock().clear();
-        defaultMemoryControl();
+        useHeapMemory();
     }
 };
 
@@ -71,14 +71,14 @@ TEST(MemGuardTest , mem_guard_can_record_mem_after_check) {
 TEST_GROUP(MemControl) {
 
     TEST_TEARDOWN(){
-        defaultMemoryControl();
+        useHeapMemory();
     }
 };
 
 TEST(MemControl, should_alloc_succ_with_right_size_from_static_mem) {
 
     void* buff[1000];
-    memoryControl(buff, 1000);
+    useStaticMemory(buff, 1000);
     void* buff1 = mallocTc(100);
     CHECK_TRUE(buff1 != NULL);
 
@@ -97,7 +97,7 @@ TEST(MemControl, should_alloc_succ_with_right_size_from_static_mem) {
 
 TEST(MemControl, should_alloc_succ_when_free_enough_size_after_mem_empty) {
     void* buff[1000];
-    memoryControl(buff, 1000);
+    useStaticMemory(buff, 1000);
     void* buff1 = mallocTc(400);
     CHECK_TRUE(buff1 != NULL);
 

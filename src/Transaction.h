@@ -31,6 +31,11 @@ typedef struct Transaction {
     ActionDesc name##_actions[] = actions;\
     Transaction name = TRANSACTION_DEF(name##_actions);
 
+#define SUB_TRANS(name)\
+    ActionResult name##func(Context* context);\
+    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
+    ActionResult name##func(Context* context)
+
 ActionResult toActionResult(TransResult ret) ;
 void rollback(RollbackContext* context);
 void upToParent(Context* parent, Context* child);
