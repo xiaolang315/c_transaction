@@ -7,7 +7,7 @@
 
 typedef enum BOOL {
     TRUE,
-    FALSE
+    FALSE,
 } BOOL;
 
 #endif //C_TRANSACTION_BASETYPE_H

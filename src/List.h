@@ -23,11 +23,13 @@ void init(BaseList* list);
 void push_back(BaseList* list, ListNode* node);
 
 typedef BOOL (*CompareFunc)(const ListNode*, const ListNode*);
+BOOL defaultCompare(const ListNode*, const ListNode*);
+
 ListNode* fetch(BaseList* list, const ListNode* matchNode, CompareFunc compare);
 
 BOOL empty(const BaseList* list);
 
-#define DEF_NODE_CONVERT(type)\
+#define DEF_NODE_CONVERT_FUNC(type)\
 static inline struct type* to##type(ListNode* node) {\
     return (type*)((char*)node);\
 }\

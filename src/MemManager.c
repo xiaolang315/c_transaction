@@ -23,7 +23,7 @@ MemNode firstMem;
 BaseList busyMem;
 BaseList reuseMem;
 
-DEF_NODE_CONVERT(MemNode)
+DEF_NODE_CONVERT_FUNC(MemNode)
 
 void useHeapMemory() {
     mallocFunc = malloc;
