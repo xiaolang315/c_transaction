@@ -28,14 +28,14 @@ TEST_GROUP(AsynTransTest) {
     AutoCheck check;
 };
 
-ASYN_ACTION_DEF(InitAction, STRUCTS(DEF_ACTION_CTXT(Simple1)))(Context *context) {
+ASYN_ACTION_DEF(InitAction, ACTION_CTXTs(ACTION_CTXT(Simple1)))(Context *context) {
     CAST_TO(Simple1, s);
     s->x = 0;
     return ActionOk;
 }
 
 
-ASYN_ACTION_DEF(SimpleAsynAction, STRUCTS(DEF_ACTION_CTXT(Simple1)))(Context *context) {
+ASYN_ACTION_DEF(SimpleAsynAction, ACTION_CTXTs(ACTION_CTXT(Simple1)))(Context *context) {
     CAST_TO(Simple1, s);
     if (s->x == 1) return ActionOk;
     s->x = 1;
@@ -66,11 +66,11 @@ TEST(AsynTransTest, start_a_asyn_trans) {
     mock().checkExpectations();
 }
 
-ASYN_SUB_TRANS(sub, ACTIONS(InitAction, SimpleAsynAction, SimpleActionCheck))
+ASYN_SUB_TRANS(sub1, ACTIONS(InitAction, SimpleAsynAction, SimpleActionCheck))
 
 TEST(AsynTransTest, start_a_asyn_trans_with_subtruns) {
     TRANS(trans,
-          ACTIONS(InitAction, SimpleAsynAction, sub
+          ACTIONS(InitAction, SimpleAsynAction, sub1
           )
     )
 

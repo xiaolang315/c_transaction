@@ -36,32 +36,27 @@ typedef struct ActionDesc {
 
 extern CtxtActionUse* NullActionUse;
 
-#define DEF_ACTION_DESC(action, context) {action, ARRAY_SIZE(context), context, SyncActionType}
-#define DEF_NULL_CTXT_ACTION_DESC(action) {action, 0, NullActionUse, SyncActionType}
-
+#define DEF_SYNC_ACTION_DESC(action, context) {action, ARRAY_SIZE(context), context, SyncActionType}
+#define DEF_NULL_CTXT_ACTION_DESC(action, context) {action, 0, NullActionUse, SyncActionType}
 #define DEF_ASYN_ACTION_DESC(action, context) {action, ARRAY_SIZE(context), context, AsynActionType}
-#define DEF_NULL_CTXT_ASYN_ACTION_DESC(action) {action, 0, NullActionUse, AsynActionType}
 
-#define DEF_ACTION_CTXT(name) {CTXT_ID(name), sizeof(name)}
+#define ACTION_CTXT(name) {CTXT_ID(name), sizeof(name)}
+#define ACTION_CTXTs(...) {__VA_ARGS__}
 
-#define STRUCTS(...) {__VA_ARGS__}
-
-#define ACTION_DEF(name, structs)\
+#define ACTION_DEF(name, name_struct, type_macro)\
 ActionResult name##func(Context* context);\
-CtxtActionUse name##_stucts[] = structs;\
-ActionDesc name = DEF_ACTION_DESC(name##func, name##_stucts);\
+ActionDesc name = type_macro(name##func, name_struct);\
 ActionResult name##func
+
+#define SYNC_ACTION_DEF(name, structs)\
+CtxtActionUse name##_stucts[] = structs;\
+ACTION_DEF(name, name##_stucts, DEF_SYNC_ACTION_DESC)
 
 #define ASYN_ACTION_DEF(name, structs)\
-ActionResult name##func(Context* context);\
 CtxtActionUse name##_stucts[] = structs;\
-ActionDesc name = DEF_ASYN_ACTION_DESC(name##func, name##_stucts);\
-ActionResult name##func
-
+ACTION_DEF(name, name##_stucts, DEF_ASYN_ACTION_DESC)
 
 #define NULL_CTXT_SYNC_ACTION_DEF(name)\
-ActionResult name##func(Context* context);\
-ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
-ActionResult name##func
+ACTION_DEF(name, "", DEF_NULL_CTXT_ACTION_DESC)
 
 #endif // __ACTION_H_

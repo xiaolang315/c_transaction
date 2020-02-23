@@ -16,9 +16,9 @@ TransResult asynExec(Context*);
 TransResult asynActionStart(Context* parentContext, PrepareChildCtxtFunc , Transaction* trans);
 
 #define ASYN_SUB_TRANS(name, actions)\
-ActionDesc name##_actions[] = actions;\
+ActionDesc name##_subActions[] = actions;\
 SUB_TRANS(name){\
-    Transaction trans = TRANSACTION_DEF(name##_actions);\
+    Transaction trans = TRANSACTION_DEF(name##_subActions);\
     return toActionResult(asynActionStart(context, NoPrepareChildCtxtFunc, &trans));\
 }
 

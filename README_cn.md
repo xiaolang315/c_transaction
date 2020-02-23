@@ -20,6 +20,16 @@
 
 ## 快速开始
 
+### 定义Action
+````c
+ ACTION_DEF(ActionName, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
+        CAST_TO(SimpleStruct, s);
+        return ActionOk;
+    }
+````
+
+
+
 ## Test
 使用CppUtest测试框架， https://github.com/cpputest/cpputest .框架自带一个Mock工具，虽然做不到Mockcpp那样无侵入的打桩static函数，
 但对作为底层框架，不需要mock第三方函数的，使用起来也比较方便，尤其是换了诸多Mock工具对Mac支持都不太好。

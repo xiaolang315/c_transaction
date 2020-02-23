@@ -31,7 +31,7 @@ void NoPrepareChildCtxtFunc(const Context* parent, Context* child){
     }
 }
 
-void rollback(RollbackContext* context) {
+static void rollback(RollbackContext* context) {
     FOREACH(OneRollBackContext, ctxt, context->contexts, context->num)
         ctxt->action(&ctxt->data);
         CHECK_FREE(ctxt->data.mem);
@@ -41,4 +41,16 @@ void rollback(RollbackContext* context) {
         rollback(context->next);
         CHECK_FREE((context->next));
     }
+}
+
+
+TransResult onActionSucc(Context* context) {
+    destroyContext(context);
+    return TransSucc;
+}
+
+TransResult onActionFail(Context* context) {
+    rollback(&context->rollbackData);
+    destroyContext(context);
+    return TransFail;
 }

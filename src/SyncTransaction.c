@@ -3,29 +3,26 @@
 #include "Context.h"
 #include "Foreach.h"
 
-static TransResult execActions(ActionDesc* actions, uint32_t actionNum, Context* context) {
+static ActionResult execActions(ActionDesc* actions, uint32_t actionNum, Context* context) {
     FOREACH(ActionDesc, action, actions, actionNum)
         ActionResult ret = action->action(context);
         if(ret != ActionOk){
-            return TransFail;
+            return ret;
         }
     FOREACH_END()
-    return TransSucc;
+    return ActionOk;
 }
 
 TransResult syncExec(const Transaction* trans){
     Context* context = initContext(trans->actions, trans->actionNum);
     if(context == NULL) return TransFail;
 
-    TransResult result = execActions(trans->actions, trans->actionNum, context);
-    if(result == TransFail) {
-        rollback(&context->rollbackData);
-        destroyContext(context);
-        return TransFail;
+    ActionResult result = execActions(trans->actions, trans->actionNum, context);
+    if(result == ActionErr) {
+        return onActionFail(context);
     }
 
-    destroyContext(context);
-    return TransSucc;
+    return onActionSucc(context);
 }
 
 ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc prepare, const Transaction* trans){
@@ -34,16 +31,13 @@ ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc prepar
 
     prepare(parent, context);
 
-    TransResult result = execActions(trans->actions, trans->actionNum, context);
-    if(result == TransFail) {
-        rollback(&context->rollbackData);
-        destroyContext(context);
-        return ActionErr;
+    ActionResult result = execActions(trans->actions, trans->actionNum, context);
+    if(result == ActionErr) {
+        return toActionResult(onActionFail(context));
     }
 
     upToParent(parent, context);
-    destroyContext(context);
-    return ActionOk;
+    return toActionResult(onActionSucc(context));
 }
 
 

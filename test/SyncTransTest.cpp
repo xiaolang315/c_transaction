@@ -14,9 +14,9 @@ namespace {
         int t[10];
     };
 
-    ACTION_DEF(SimpleAction2, STRUCTS(
-            DEF_ACTION_CTXT(SimpleStruct1)
-            ,DEF_ACTION_CTXT(SimpleStruct)
+    SYNC_ACTION_DEF(SimpleAction2, ACTION_CTXTs(
+            ACTION_CTXT(SimpleStruct1)
+            , ACTION_CTXT(SimpleStruct)
             ))(Context* context) {
         CAST_TO(SimpleStruct1, s);
         s->t[0] = 1;
@@ -26,13 +26,13 @@ namespace {
         return ActionOk;
     }
 
-    ACTION_DEF(SimpleSyncAction, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
+    SYNC_ACTION_DEF(SimpleSyncAction, ACTION_CTXTs(ACTION_CTXT(SimpleStruct)))(Context* context) {
         CAST_TO(SimpleStruct, s);
         s->x = 1;
         return ActionOk;
     }
 
-    ACTION_DEF(SimpleActionCheck, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
+    SYNC_ACTION_DEF(SimpleActionCheck, ACTION_CTXTs(ACTION_CTXT(SimpleStruct)))(Context* context) {
         CAST_TO(SimpleStruct, s);
         mock().actualCall("SimpleActionCheck").withParameter("x", s->x);
         return ActionOk;
@@ -42,7 +42,7 @@ namespace {
         char y;
     };
 
-    ACTION_DEF(SimpleFailAction, STRUCTS(DEF_ACTION_CTXT(SimpleFailStruct)))(Context* context) {
+    SYNC_ACTION_DEF(SimpleFailAction, ACTION_CTXTs(ACTION_CTXT(SimpleFailStruct)))(Context* context) {
         CAST_TO(SimpleFailStruct, s);
         s->y = 2;
         return ActionErr;

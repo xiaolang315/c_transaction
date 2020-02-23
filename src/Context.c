@@ -94,7 +94,7 @@ Context* initContext(ActionDesc* actions, uint32_t actionNum) {
     if(isAsyn == TRUE) {
         STRUCT_ALLOC(AsynContext, asynContext);
         CHECK_PTR_R(asynContext , NULL);
-        asynContext->runtimeActions = NULL;
+        asynContext->runtimeActionsBuff = NULL;
         context->asynContext = asynContext;
     }
 
@@ -125,7 +125,7 @@ void destroyContext(Context* context) {
     CHECK_FREE(context->data);
     destroyRollbackData(&context->rollbackData);
     if(context->asynContext != NULL) {
-        CHECK_FREE(context->asynContext->runtimeActions);
+        CHECK_FREE(context->asynContext->runtimeActionsBuff);
         freeTc(context->asynContext);
         context->asynContext = NULL;
     }

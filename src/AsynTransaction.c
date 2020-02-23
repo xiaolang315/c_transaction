@@ -7,39 +7,48 @@
 #include <stdlib.h>
 #include "MemHelp.h"
 
+static void initRuntimeAction(RuntimeAction* self, Action action, RuntimeAction* next) {
+    self->action = action;
+    self->context = NULL;
+    self->next = next;
+}
+
 static BOOL initRuntimeActions(AsynContext* context, ActionDesc* actions, uint32_t actionNum){
-    RuntimeAction* runtimeAction = NULL;
-    ARRAY_ALLOC(RuntimeAction, runtimeAction, actionNum);
-    if(runtimeAction == NULL) return FALSE;
+    RuntimeAction* mem = NULL;
+    ARRAY_ALLOC(RuntimeAction, mem, actionNum);
+    if(mem == NULL) return FALSE;
 
     RuntimeAction* current = &context->current;
     FOREACH(ActionDesc, action, actions, actionNum)
-        current->action = action->action;
-        current->next = &runtimeAction[actioni];
-        current->context = NULL;
+        initRuntimeAction(current, action->action, &mem[ITEM_INDEX(action)]);
         current = current->next;
     FOREACH_END()
-    current->next = NULL;
-    current->action = NULL;
-    current->context = NULL;
-    context->runtimeActions = runtimeAction;
+    initRuntimeAction(current, NULL, NULL);
+
+    context->runtimeActionsBuff = mem;
     return TRUE;
 }
 
-TransResult asynStart(const Transaction* trans, Context** outContext) {
+static  Context* initAsynContext(const Transaction* trans) {
     Context* context = initContext(trans->actions, trans->actionNum);
     if(context == NULL) {
-        destroyContext(context);
-        return TransFail;
+        return NULL;
     }
-    *outContext = context;
 
     BOOL ret = initRuntimeActions(context->asynContext, trans->actions, trans->actionNum);
     if(ret == FALSE) {
         destroyContext(context);
+        return NULL;
+    }
+    return context;
+}
+
+TransResult asynStart(const Transaction* trans, Context** outContext) {
+    Context* context = initAsynContext(trans);
+    if(context == NULL) {
         return TransFail;
     }
-
+    *outContext = context;
     return asynExec(context);
 }
 
@@ -47,8 +56,7 @@ static TransResult doActions(AsynContext* asynContext, Context* context) {
     do{
         ActionResult ret = asynContext->current.action(context);
         if(ret == ActionErr){
-            rollback(&context->rollbackData);
-            destroyContext(context);
+            onActionFail(context);
             return TransFail;
         } else if(ret == ActionContinue) {
             return TransContinue;
@@ -64,8 +72,7 @@ TransResult asynExec(Context* context) {
     if(ret != TransSucc) {
         return ret;
     }
-    destroyContext(context);
-    return TransSucc;
+    return onActionSucc(context);
 }
 
 static TransResult asynExecInAction(Context* context, Context* parent) {
@@ -75,27 +82,19 @@ static TransResult asynExecInAction(Context* context, Context* parent) {
     }
 
     upToParent(parent, context);
-    destroyContext(context);
-    return TransSucc;
+    return onActionSucc(context);
 }
 
 TransResult asynActionStart(Context* parentContext, PrepareChildCtxtFunc prepare, Transaction* trans){
     RuntimeAction* current = &parentContext->asynContext->current;
     Context* subContext = current->context;
     if (subContext == NULL) {
-        Context* childContext = initContext(trans->actions, trans->actionNum);
+        Context* childContext = initAsynContext(trans);
         if(childContext == NULL) {
-            destroyContext(childContext);
             return TransFail;
         }
         prepare(childContext, parentContext);
         current->context = childContext;
-
-        BOOL ret = initRuntimeActions(childContext->asynContext, trans->actions, trans->actionNum);
-        if(ret) {
-            destroyContext(childContext);
-            return TransFail;
-        }
     }
 
     return asynExecInAction(current->context , parentContext);

@@ -33,11 +33,12 @@ typedef struct Transaction {
 
 #define SUB_TRANS(name)\
     ActionResult name##func(Context* context);\
-    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func);\
+    ActionDesc name = DEF_NULL_CTXT_ACTION_DESC(name##func, );\
     ActionResult name##func(Context* context)
 
 ActionResult toActionResult(TransResult ret) ;
-void rollback(RollbackContext* context);
+TransResult onActionFail(Context* context);
+TransResult onActionSucc(Context* context);
 void upToParent(Context* parent, Context* child);
 
 typedef void (*PrepareChildCtxtFunc)(const Context* parent, Context* child);
