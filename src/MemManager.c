@@ -45,11 +45,11 @@ struct MemNode* reUseFetch(uint32_t size) {
     return toMemNode(fetch(&reuseMem, (ListNode*)&matcher, memSizeMatcher));
 }
 
-static size_t withMemNode(size_t size) {
+static size_t withMemNode(uint32_t size) {
    return size + sizeof(MemNode) ;
 }
 
-static MemNode* doAllocNewMem(size_t needSize, size_t allocSize) {
+static MemNode* doAllocNewMem(uint32_t needSize, uint32_t allocSize) {
     MemNode* lastPos = toMemNode(busyMem.last);
     char* newPtr =  lastPos->ptr + lastPos->size;
     MemNode* currentNode = (MemNode*)(newPtr + allocSize );

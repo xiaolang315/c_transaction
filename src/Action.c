@@ -4,5 +4,5 @@
 #include <stddef.h>
 #include "Action.h"
 
-CtxtActionUse* NullActionUse = NULL;
+ActionContext* NullActionUse = NULL;
 

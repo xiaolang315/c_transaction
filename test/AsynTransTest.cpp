@@ -4,7 +4,7 @@
 #include "AsynTransaction.h"
 #include "MemManager.h"
 
-DEF_CTXT(Simple1) {
+DEF_ACTION_CTXT(Simple1) {
     int x;
 };
 
@@ -14,7 +14,7 @@ struct AutoCheck {
         useStaticMemory(buff, ARRAY_SIZE(buff));
     }
     ~AutoCheck(){
-        CHECK_EQUAL(NULL, checkMemLeaksPos());
+        CHECK_EQUAL(NULL, checkMemLeaksPos())
         useHeapMemory();
     }
 };
@@ -97,7 +97,7 @@ struct RollbackStruct {
 };
 
 NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context *context) {
-    RollbackStruct s;
+    RollbackStruct s = {0};
     RollbackData data = {&s, sizeof(s)};
     AddRollBack(&context->rollbackData, RollBackActionDemo, &data);
     return ActionOk;

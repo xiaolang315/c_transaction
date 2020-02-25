@@ -1,11 +1,11 @@
 #ifndef __CONTEXT_H_
 #define __CONTEXT_H_
 
-#include <stdint.h>
 #include "ExternC.h"
 #include "BaseType.h"
 #include "FwdDecl.h"
 #include "Action.h"
+#include "ActionContext.h"
 
 EXTERN_STDC_BEGIN
 
@@ -40,7 +40,6 @@ typedef struct ContextMap {
 
 typedef void* (*CastTo)(const ContextMap*, void* data, uint32_t id);
 
-FWD_DECL(AsynContext);
 typedef struct RuntimeAction {
     Action action;
     struct RuntimeAction* next;
@@ -60,18 +59,11 @@ typedef struct Context {
   AsynContext* asynContext;
 } Context;
 
-#define CTXT_ID(name) name##Id
-
 #define CAST_TO(type, var)\
   type* var = (type*)(context->castTo(&context->map, context->data, CTXT_ID(type)));
 
-#define DEF_CTXT(name)\
-const int CTXT_ID(name) = __COUNTER__;\
-struct name
-
 BOOL AddRollBack(RollbackContext* , RollBackAction, const RollbackData*);
 
-FWD_DECL(ActionDesc);
 Context* initContext(ActionDesc* actions, uint32_t actionNum);
 void destroyContext(Context* context) ;
 

@@ -17,7 +17,7 @@ TEST_GROUP(MemGuardTest) {
 };
 
 bool fooFunc() {
-    MEM_GUARD(1)
+    MEM_GUARD(1);
 
     void* buff = mallocTc(100);
     CHECK_PTR_R(buff, false);
@@ -48,7 +48,7 @@ void freeAllDemo(void** buff, uint32_t num){
 
 TEST(MemGuardTest , mem_guard_can_record_mem_after_check) {
 
-    MEM_GUARD(2)
+    MEM_GUARD(2);
 
     void* buff = mallocTc(100);
     CHECK_PTR(buff);

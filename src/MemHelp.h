@@ -14,14 +14,14 @@ EXTERN_STDC_BEGIN
 type* var = (type*)mallocTc(sizeof(type));
 
 #define ARRAY_ALLOC(type, var, num)\
-var = (type*)mallocTc(sizeof(type) * num);
+var = (type*)mallocTc(sizeof(type) * num)
 
 #define  MEM_GUARD(n);\
 typedef struct MemGuard {\
     void* buff[n];\
     uint32_t num;\
 }MemGuard; MemGuard mem_guard ; const uint32_t max = n;\
-mem_guard.num = 0;
+mem_guard.num = 0
 
 void freeAll(void** buff, uint32_t num);
 

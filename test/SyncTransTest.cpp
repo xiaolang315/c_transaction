@@ -6,11 +6,11 @@
 #include "MemManager.h"
 
 namespace {
-    DEF_CTXT(SimpleStruct){
+    DEF_ACTION_CTXT(SimpleStruct){
         int x;
     };
 
-    DEF_CTXT(SimpleStruct1){
+    DEF_ACTION_CTXT(SimpleStruct1){
         int t[10];
     };
 
@@ -38,7 +38,7 @@ namespace {
         return ActionOk;
     }
 
-    DEF_CTXT(SimpleFailStruct){
+    DEF_ACTION_CTXT(SimpleFailStruct){
         char y;
     };
 

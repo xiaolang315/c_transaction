@@ -25,7 +25,7 @@ static void insertHash(ContextMap* map, uint32_t offset, uint32_t id){
     map->hashNum ++;
 }
 
-static void getLength(ContextMap* map, uint32_t* length, CtxtActionUse* context){
+static void getLength(ContextMap* map, uint32_t* length, ActionContext* context){
     int offSet = getOffSet(map, context->id);
     if(offSet == -1) {
         insertHash(map, *length, context->id);
@@ -63,7 +63,7 @@ static uint32_t initLength(ContextMap* map, ActionDesc* actions, uint32_t action
     map->hashNum = 0;
 
     FOREACH(ActionDesc, action, actions, actionNum)
-        FOREACH(CtxtActionUse, context, action->contexts, action->ctxtNum)
+        FOREACH(ActionContext, context, action->contexts, action->ctxtNum)
             getLength(map, &length, context);
         FOREACH_END()
     FOREACH_END()

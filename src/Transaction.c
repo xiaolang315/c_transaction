@@ -12,7 +12,7 @@ ActionResult toActionResult(TransResult ret) {
         case TransSucc: return ActionOk;
         case TransFail: return ActionErr;
         case TransContinue: return ActionContinue;
-        default: return ActionUnknow;
+        default: return ActionUnknown;
     }
 }
 

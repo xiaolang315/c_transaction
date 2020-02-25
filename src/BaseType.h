@@ -5,6 +5,8 @@
 #ifndef C_TRANSACTION_BASETYPE_H
 #define C_TRANSACTION_BASETYPE_H
 
+#include <stdint.h>
+
 typedef enum BOOL {
     TRUE,
     FALSE,

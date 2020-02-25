@@ -5,7 +5,7 @@
 
 #define ITEM_INDEX(item) item##i
 #define FOREACH_FROM(type, item, list, start, num) \
- for( uint32_t ITEM_INDEX(item) = start; item##i < num; item##i++ ) {\
+ for( uint32_t ITEM_INDEX(item) = start; ITEM_INDEX(item) < (num); ITEM_INDEX(item) ++ ) {\
     type* item = &list[ITEM_INDEX(item)];
 
 #define FOREACH(type, item, list, num) \

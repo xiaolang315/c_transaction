@@ -12,15 +12,15 @@ typedef enum ActionResult {
    ActionOk,
    ActionContinue,
    ActionErr,
-   ActionUnknow
+   ActionUnknown
 } ActionResult;
 
 typedef ActionResult (*Action)(Context* context);
 
-typedef struct ContextDesc {
+typedef struct ActionContext {
     uint32_t id;
     uint32_t size;
-} CtxtActionUse;
+} ActionContext;
 
 typedef enum ActionType {
     SyncActionType,
@@ -30,11 +30,11 @@ typedef enum ActionType {
 typedef struct ActionDesc {
     Action action;
     uint32_t ctxtNum;
-    CtxtActionUse* contexts;
+    ActionContext* contexts;
     ActionType type;
 } ActionDesc;
 
-extern CtxtActionUse* NullActionUse;
+extern ActionContext* NullActionUse;
 
 #define DEF_SYNC_ACTION_DESC(action, context) {action, ARRAY_SIZE(context), context, SyncActionType}
 #define DEF_NULL_CTXT_ACTION_DESC(action, context) {action, 0, NullActionUse, SyncActionType}
@@ -49,11 +49,11 @@ ActionDesc name = type_macro(name##func, name_struct);\
 ActionResult name##func
 
 #define SYNC_ACTION_DEF(name, structs)\
-CtxtActionUse name##_stucts[] = structs;\
+ActionContext name##_stucts[] = structs;\
 ACTION_DEF(name, name##_stucts, DEF_SYNC_ACTION_DESC)
 
 #define ASYN_ACTION_DEF(name, structs)\
-CtxtActionUse name##_stucts[] = structs;\
+ActionContext name##_stucts[] = structs;\
 ACTION_DEF(name, name##_stucts, DEF_ASYN_ACTION_DESC)
 
 #define NULL_CTXT_SYNC_ACTION_DEF(name)\

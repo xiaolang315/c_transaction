@@ -20,15 +20,75 @@
 
 ## 快速开始
 
-### 定义Action
+### 概念解读
+* Action 事务原子操作, 支持同步（SYNC_ACTION_DEF）异步（SYNC_ACTION_DEF）定义
+* ActionContext Action依赖的上下文结构。
+* Context 事务上下文，存储前后Action之间关联数据和回滚数据。
+* TransAction 完整事务描述。
+
+### 定义使用Action
 ````c
- ACTION_DEF(ActionName, STRUCTS(DEF_ACTION_CTXT(SimpleStruct)))(Context* context) {
-        CAST_TO(SimpleStruct, s);
-        return ActionOk;
+    DEF_ACTION_CTXT(SimpleFailStruct){
+        char y;
+    };
+
+    SYNC_ACTION_DEF(SimpleFailAction, ACTION_CTXTs(ACTION_CTXT(SimpleFailStruct)))(Context* context) {
+        CAST_TO(SimpleFailStruct, s);
+        s->y = 2;
+        return ActionErr;
     }
 ````
+使用`CAST_TO`把 `Context`转换 为`Action`所依赖的`ActionContext`
+### 定义执行Trans
+```c
+ TRANS(trans,
+              ACTIONS(SimpleSyncAction
+                      , SimpleAction2
+                      , SimpleActionCheck
+              )
+        )
+ TransResult ret = syncExec(&trans);
+```
+`ACTIONS`中顺序放之前定义的动作，框架会根据所有`Action`所依赖的`ActionContext`来确定
+`Context`的大小。
 
+### 回滚动作的定义和插入
 
+```c
+    void RollBackActionDemo(RollbackData* data){
+        if(data->len != sizeof(RollbackStruct)) return ;
+        RollbackStruct* s = (RollbackStruct*)data->mem;
+    }
+
+    NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
+        RollbackStruct s = {Expect_X};
+        RollbackData data = {&s, sizeof(s)};
+        AddRollBack(&context->rollbackData, RollBackActionDemo, &data);
+        return ActionOk;
+    }
+```
+### 异步Trans定义
+
+异步 `Action` 定义
+```c
+ASYN_ACTION_DEF(InitAction, ACTION_CTXTs(ACTION_CTXT(Simple1)))(Context *context) {
+    CAST_TO(Simple1, s);
+    s->x = 0;
+    return ActionOk;
+}
+```
+异步 `Transaction` 使用异步 `Action`
+```c
+    TRANS(trans,
+          ACTIONS(InitAction, SimpleAsynAction, sub1
+          )
+    )
+
+    Context *context;
+    TransResult ret = asynStart(&trans, &context);
+    ret = asynExec(context);
+```
+需要保留上下文指针，在需要时继续 `Transaction`
 
 ## Test
 使用CppUtest测试框架， https://github.com/cpputest/cpputest .框架自带一个Mock工具，虽然做不到Mockcpp那样无侵入的打桩static函数，
