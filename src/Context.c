@@ -6,7 +6,17 @@
 #include "Foreach.h"
 #include "Action.h"
 #include "MemHelp.h"
-#include <memory.h>
+#include "AsynContext.h"
+
+typedef struct ContextSet {
+    uint32_t id;
+    uint32_t offset;
+}ContextSet;
+
+typedef struct ContextMap {
+    ContextSet* hash;
+    uint32_t hashNum;
+} ContextMap;
 
 static int getOffSet(const ContextMap* map,  uint32_t id){
     FOREACH(ContextSet, set, map->hash, map->hashNum)
@@ -15,8 +25,14 @@ static int getOffSet(const ContextMap* map,  uint32_t id){
     return -1;
 }
 
-static void* castTo(const ContextMap* map, void* data, uint32_t id){
-    return data + getOffSet(map, id);
+typedef struct ContextMem {
+    Context context;
+    ContextMap map;
+} ContextMem;
+
+void* castTo(Context* context, uint32_t id){
+    ContextMem* mem = (ContextMem*) context;
+    return context->data+ getOffSet(&mem->map, id);
 }
 
 static void insertHash(ContextMap* map, uint32_t offset, uint32_t id){
@@ -33,22 +49,8 @@ static void getLength(ContextMap* map, uint32_t* length, ActionContext* context)
     }
 }
 
-BOOL AddRollBack(RollbackContext* context, RollBackAction action, const RollbackData* data){
-    if(context->num == context->maxNum) return FALSE;
-    context->contexts[context->num].action = action;
 
-    RollbackData* toData = &context->contexts[context->num].data;
-
-    toData->mem = mallocTc(data->len);
-    if(toData->mem == NULL) return FALSE;
-
-    memcpy(toData->mem, data->mem, data->len);
-    toData->len = data->len;
-    context->num++;
-    return TRUE;
-}
-
-BOOL includeAsynAction(ActionDesc* actions, uint32_t actionNum) {
+BOOL isIncludeAsynAction(ActionDesc* actions, uint32_t actionNum) {
     FOREACH(ActionDesc, action, actions, actionNum)
         if(action->type == AsynActionType) {
             return TRUE;
@@ -58,7 +60,7 @@ BOOL includeAsynAction(ActionDesc* actions, uint32_t actionNum) {
     return FALSE;
 }
 
-static uint32_t initLength(ContextMap* map, ActionDesc* actions, uint32_t actionNum) {
+static uint32_t initContextMap(ContextMap* map, ActionDesc* actions, uint32_t actionNum) {
     uint32_t length = 0;
     map->hashNum = 0;
 
@@ -71,64 +73,64 @@ static uint32_t initLength(ContextMap* map, ActionDesc* actions, uint32_t action
     return length;
 }
 
-static void initRollBackCtxt(RollbackContext* context, uint32_t actionNum){
-    context->next = NULL;
-    context->num = 0;
-    context->maxNum = actionNum;
-}
-
 static void constructContext(Context* context) {
     context->asynContext = NULL;
-    context->castTo = castTo;
     context->data = NULL;
 }
 
-Context* initContext(ActionDesc* actions, uint32_t actionNum) {
-    MEM_GUARD(7);
 
-    STRUCT_ALLOC(Context, context);
-    CHECK_PTR_R(context, NULL);
-    constructContext(context);
 
-    BOOL isAsyn = includeAsynAction(actions, actionNum);
-    if(isAsyn == TRUE) {
-        STRUCT_ALLOC(AsynContext, asynContext);
-        CHECK_PTR_R(asynContext , NULL);
-        asynContext->runtimeActionsBuff = NULL;
-        context->asynContext = asynContext;
-    }
-
-    ARRAY_ALLOC(ContextSet, context->map.hash , actionNum);
-    CHECK_PTR_R(context->map.hash , NULL);
-
-    uint32_t length = initLength(&context->map, actions, actionNum);
-    context->data = mallocTc(length);
-    CHECK_PTR_R(context->data , NULL);
-
-    ARRAY_ALLOC(OneRollBackContext, context->rollbackData.contexts , actionNum);
-    CHECK_PTR_R(context->rollbackData.contexts , NULL);
-
-    initRollBackCtxt(&context->rollbackData, actionNum);
-
-    return context;
+void freeAsynContext(RollbackData* data){
+    MemPtr* ptr = (MemPtr*)data->mem;
+    destroyAsynContext((AsynContext*)ptr->ptr);
 }
 
-void destroyRollbackData(RollbackContext* data) {
-    CHECK_FREE(data->contexts);
-    if(data->next) {
-        destroyRollbackData(data->next);
-        freeTc(data->next);
+
+void freeRollBack(RollbackData* data){
+    MemPtr* ptr = (MemPtr*)data->mem;
+    destroyRollbackData((RollbackContext*)ptr->ptr);
+}
+
+
+Context* initContext(ActionDesc* actions, uint32_t actionNum) {
+    MEM_GUARD_E_R(7, NULL);
+
+    STRUCT_ALLOC(ContextMem, mem);
+    CHECK_PTR_E_R(mem, NULL);
+
+    Context* context = (Context*) mem;
+    constructContext(context);
+
+    BOOL isAsyn = isIncludeAsynAction(actions, actionNum);
+    if(isAsyn == TRUE) {
+        context->asynContext = initAsynContext(actions, actionNum);
+        CHECK_PTR_E_FUNC_R(context->asynContext,  freeAsynContext, NULL);
     }
+
+    ARRAY_ALLOC(ContextSet, mem->map.hash , actionNum);
+    CHECK_PTR_E_R(mem->map.hash , NULL);
+
+    uint32_t length = initContextMap(&mem->map, actions, actionNum);
+    context->data = mallocTc(length);
+    CHECK_PTR_E_R(context->data , NULL);
+
+    context->rollbackData = initRollBackCtxt(actionNum);
+    CHECK_PTR_E_FUNC_R(&context->rollbackData,  freeRollBack, NULL);
+
+    MEM_GUARD_END()
+    return context;
 }
 
 void destroyContext(Context* context) {
     CHECK_FREE(context->data);
-    destroyRollbackData(&context->rollbackData);
+    destroyRollbackData(context->rollbackData);
+    context->rollbackData = NULL;
+
     if(context->asynContext != NULL) {
-        CHECK_FREE(context->asynContext->runtimeActionsBuff);
-        freeTc(context->asynContext);
+        destroyAsynContext(context->asynContext);
         context->asynContext = NULL;
     }
-    CHECK_FREE(context->map.hash);
-    CHECK_FREE(context);
+    ContextMem * mem = (ContextMem*) context;
+    CHECK_FREE(mem->map.hash);
+    CHECK_FREE(mem);
 }

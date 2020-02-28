@@ -2,49 +2,10 @@
 // Created by zhangchao on 2020/2/7.
 //
 #include "AsynTransaction.h"
-#include "Context.h"
-#include "Foreach.h"
-#include <stdlib.h>
-#include "MemHelp.h"
-
-static void initRuntimeAction(RuntimeAction* self, Action action, RuntimeAction* next) {
-    self->action = action;
-    self->context = NULL;
-    self->next = next;
-}
-
-static BOOL initRuntimeActions(AsynContext* context, ActionDesc* actions, uint32_t actionNum){
-    RuntimeAction* mem = NULL;
-    ARRAY_ALLOC(RuntimeAction, mem, actionNum);
-    if(mem == NULL) return FALSE;
-
-    RuntimeAction* current = &context->current;
-    FOREACH(ActionDesc, action, actions, actionNum)
-        initRuntimeAction(current, action->action, &mem[ITEM_INDEX(action)]);
-        current = current->next;
-    FOREACH_END()
-    initRuntimeAction(current, NULL, NULL);
-
-    context->runtimeActionsBuff = mem;
-    return TRUE;
-}
-
-static  Context* initAsynContext(const Transaction* trans) {
-    Context* context = initContext(trans->actions, trans->actionNum);
-    if(context == NULL) {
-        return NULL;
-    }
-
-    BOOL ret = initRuntimeActions(context->asynContext, trans->actions, trans->actionNum);
-    if(ret == FALSE) {
-        destroyContext(context);
-        return NULL;
-    }
-    return context;
-}
+#include "AsynContext.h"
 
 TransResult asynStart(const Transaction* trans, Context** outContext) {
-    Context* context = initAsynContext(trans);
+    Context* context = initContext(trans->actions, trans->actionNum);
     if(context == NULL) {
         return TransFail;
     }
@@ -85,11 +46,11 @@ static TransResult asynExecInAction(Context* context, Context* parent) {
     return onActionSucc(context);
 }
 
-TransResult asynActionStart(Context* parentContext, PrepareChildCtxtFunc prepare, Transaction* trans){
+TransResult asynActionStart(Context* parentContext, PrepareChildCtxtFunc prepare, const Transaction* trans){
     RuntimeAction* current = &parentContext->asynContext->current;
     Context* subContext = current->context;
     if (subContext == NULL) {
-        Context* childContext = initAsynContext(trans);
+        Context* childContext = initContext(trans->actions, trans->actionNum);
         if(childContext == NULL) {
             return TransFail;
         }

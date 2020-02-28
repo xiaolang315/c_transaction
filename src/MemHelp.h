@@ -35,6 +35,12 @@ if(ptr == NULL || mem_guard.num >= max) {\
    mem_guard.buff[mem_guard.num++] = ptr;\
 }
 
+#define CHECK_BOOL_R(cond, ret)\
+if(!(cond) || mem_guard.num >= max) {\
+   FREE_ALL(mem_guard.buff, mem_guard.num);\
+    return ret;\
+}
+
 #define CHECK_PTR_R(ptr, ret)\
 if(ptr == NULL || mem_guard.num >= max) {\
     FREE_ALL(mem_guard.buff, mem_guard.num);\
@@ -42,6 +48,47 @@ if(ptr == NULL || mem_guard.num >= max) {\
 } else {\
    mem_guard.buff[mem_guard.num++] = ptr;\
 }
+
+
+#define MEM_GUARD_E(num) \
+    RollbackContext* __mguard = initRollBackCtxt(num);\
+    if(__mguard == NULL) return;
+
+#define MEM_GUARD_E_R(num, ret) \
+    RollbackContext* __mguard = initRollBackCtxt(num);\
+    if(__mguard == NULL) return ret;
+
+
+#define MEM_GUARD_END()\
+destroyRollbackData(__mguard);\
+
+typedef struct MemPtr {
+    void* ptr;
+} MemPtr;
+
+#define CHECK_PTR_E_FUNC_R(ptr, func, ret)\
+if(ptr!= NULL) {\
+    ROLL_BACK_DATA(MemPtr, memPtr, ptr);\
+    addRollBack(__mguard, func, &memPtr);\
+} else {\
+    rollback(__mguard);\
+    destroyRollbackData(__mguard);\
+    return ret;\
+}
+
+#define CHECK_PTR_E_FUNC(ptr, func)\
+if(ptr!= NULL) {\
+    ROLL_BACK_DATA(MemPtr, memPtr, ptr);\
+    addRollBack(__mguard, func, &memPtr);\
+} else {\
+    rollback(__mguard);\
+    destroyRollbackData(__mguard);\
+    __mguard = NULL;\
+}
+
+#define CHECK_PTR_E(ptr) CHECK_PTR_E_FUNC(ptr, contextMemFree)
+#define CHECK_PTR_E_R(ptr, ret) CHECK_PTR_E_FUNC_R(ptr, contextMemFree, ret)
+
 
 #define CHECK_FREE(ptr)\
 if(ptr != NULL) {freeTc(ptr); ptr = NULL;}

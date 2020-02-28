@@ -1,6 +1,7 @@
 //
 // Created by zhangchao on 2020/2/12.
 //
+#include <RollbackContext.h>
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 #include "MemHelp.h"
@@ -35,6 +36,46 @@ TEST(MemGuardTest , mem_alloc_ex_max_num_should_return_fail) {
     mock().expectNoCall("malloc2");
     mock().expectOneCall("malloc1");
     CHECK_FALSE(fooFunc());
+}
+
+
+void freeMockFunc(RollbackData* mem){
+    MemPtr* ptr = (MemPtr*)mem->mem;
+    mock().expectOneCall("free1").withParameter("ptr", ptr->ptr);
+    freeTc(ptr->ptr);
+}
+
+TEST(MemGuardTest , mem_guard_use_rollback_context) {
+    MEM_GUARD_E(3);
+
+    void* buff1 = mallocTc(100);
+    CHECK_PTR_E_FUNC(buff1, freeMockFunc);
+
+    void* buff2 = mallocTc(100);
+    CHECK_PTR_E_FUNC(buff2, freeMockFunc);
+
+    CHECK_PTR_E(NULL);
+
+    mock().expectNCalls(2,"free1").withParameter("ptr", buff1).withParameter("ptr", buff2);
+
+    MEM_GUARD_END()
+}
+
+TEST(MemGuardTest , mem_guard_use_rollback_context_no_error) {
+    MEM_GUARD_E(3);
+
+    void* buff1 = mallocTc(100);
+    CHECK_PTR_E_FUNC(buff1, freeMockFunc);
+
+    void* buff2 = mallocTc(100);
+    CHECK_PTR_E_FUNC(buff2, freeMockFunc);
+
+    mock().expectNoCall("free1");
+
+    MEM_GUARD_END()
+
+    freeTc(buff1);
+    freeTc(buff2);
 }
 
 

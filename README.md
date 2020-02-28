@@ -4,11 +4,11 @@
 
 ## 待支持的特性：
 * 更完善的测试
-* 使用堆内存时，也提供内存泄漏检测。
 * 内存分配算法指定
 * 文档支持
 * 运行log
 * demo
+* 使用堆内存时，也提供内存泄漏检测。
 
 ## 支持的特性
 * 根据定义action所依赖的struct，自动生成context
@@ -63,7 +63,7 @@
     NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
         RollbackStruct s = {Expect_X};
         RollbackData data = {&s, sizeof(s)};
-        AddRollBack(&context->rollbackData, RollBackActionDemo, &data);
+        addRollBack(&context->rollbackData, RollBackActionDemo, &data);
         return ActionOk;
     }
 ```

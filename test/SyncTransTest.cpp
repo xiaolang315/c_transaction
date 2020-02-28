@@ -101,9 +101,8 @@ namespace {
     const int Expect_X = 0xfe;
 
     NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
-        RollbackStruct s = {Expect_X};
-        RollbackData data = {&s, sizeof(s)};
-        AddRollBack(&context->rollbackData, RollBackActionDemo, &data);
+        ROLL_BACK_DATA(RollbackStruct, data, Expect_X)
+        addRollBack(context->rollbackData, RollBackActionDemo, &data);
         return ActionOk;
     }
 

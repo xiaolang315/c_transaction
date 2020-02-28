@@ -99,7 +99,7 @@ struct RollbackStruct {
 NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context *context) {
     RollbackStruct s = {0};
     RollbackData data = {&s, sizeof(s)};
-    AddRollBack(&context->rollbackData, RollBackActionDemo, &data);
+    addRollBack(context->rollbackData, RollBackActionDemo, &data);
     return ActionOk;
 }
 

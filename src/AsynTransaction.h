@@ -13,7 +13,7 @@ EXTERN_STDC_BEGIN
 TransResult asynStart(const Transaction*, Context**);
 TransResult asynExec(Context*);
 
-TransResult asynActionStart(Context* parentContext, PrepareChildCtxtFunc , Transaction* trans);
+TransResult asynActionStart(Context* parentContext, PrepareChildCtxtFunc , const Transaction* trans);
 
 #define ASYN_SUB_TRANS(name, actions)\
 ActionDesc name##_subActions[] = actions;\

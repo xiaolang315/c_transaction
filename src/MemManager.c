@@ -20,6 +20,7 @@ DEF_NODE_BEGIN(MemNode)
 DEF_NODE_END(MemNode)
 
 MemNode firstMem;
+MemNode lastPos;
 BaseList busyMem;
 BaseList reuseMem;
 
@@ -50,12 +51,13 @@ static size_t withMemNode(uint32_t size) {
 }
 
 static MemNode* doAllocNewMem(uint32_t needSize, uint32_t allocSize) {
-    MemNode* lastPos = toMemNode(busyMem.last);
-    char* newPtr =  lastPos->ptr + lastPos->size;
+    char* newPtr =  lastPos.ptr + lastPos.size;
     MemNode* currentNode = (MemNode*)(newPtr + allocSize );
     currentNode->ptr = newPtr;
     currentNode->size = needSize;
     leftSize -= needSize;
+    lastPos.ptr = newPtr;
+    lastPos.size = needSize;
     return currentNode;
 }
 
@@ -100,9 +102,8 @@ void useStaticMemory(void* buff, uint32_t size) {
     init(&reuseMem);
     init(&busyMem);
     busyMem.last = (ListNode*)&firstMem;
-    MemNode* lastPos = toMemNode(busyMem.last);
-    lastPos->ptr = buff;
-    lastPos->size = 0;
+    lastPos.ptr = buff;
+    lastPos.size = 0;
 }
 
 void* mallocTc(uint32_t size) {

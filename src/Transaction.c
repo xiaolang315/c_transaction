@@ -18,10 +18,11 @@ ActionResult toActionResult(TransResult ret) {
 
 void upToParent(Context* parent, Context* child) {
     RollbackContext* next = (RollbackContext*)mallocTc(sizeof(RollbackContext));
-    *next = child->rollbackData;
-    parent->rollbackData.next = next;
-    child->rollbackData.contexts = NULL;
-    child->rollbackData.next = NULL;
+    *next = *child->rollbackData;
+    parent->rollbackData->next = next;
+    child->rollbackData->contexts = NULL;
+    child->rollbackData->num = 0;
+    child->rollbackData->next = NULL;
 }
 
 
@@ -31,26 +32,13 @@ void NoPrepareChildCtxtFunc(const Context* parent, Context* child){
     }
 }
 
-static void rollback(RollbackContext* context) {
-    FOREACH(OneRollBackContext, ctxt, context->contexts, context->num)
-        ctxt->action(&ctxt->data);
-        CHECK_FREE(ctxt->data.mem);
-    FOREACH_END()
-    CHECK_FREE(context->contexts);
-    if(context->next) {
-        rollback(context->next);
-        CHECK_FREE((context->next));
-    }
-}
-
-
 TransResult onActionSucc(Context* context) {
     destroyContext(context);
     return TransSucc;
 }
 
 TransResult onActionFail(Context* context) {
-    rollback(&context->rollbackData);
+    rollback(context->rollbackData);
     destroyContext(context);
     return TransFail;
 }

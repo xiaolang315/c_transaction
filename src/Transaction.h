@@ -41,6 +41,7 @@ TransResult onActionFail(Context* context);
 TransResult onActionSucc(Context* context);
 void upToParent(Context* parent, Context* child);
 
+
 typedef void (*PrepareChildCtxtFunc)(const Context* parent, Context* child);
 void NoPrepareChildCtxtFunc(const Context* parent, Context* child);
 
