@@ -56,6 +56,6 @@ BOOL defaultCompare(const ListNode* left, const ListNode* right) {
     return left == right ? TRUE : FALSE;
 }
 
-BOOL empty(const BaseList* list) {
+BOOL isEmpty(const BaseList* list) {
     return list->first == NULL? TRUE:FALSE;
 }

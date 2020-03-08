@@ -5,10 +5,24 @@
 #include "RollbackContext.h"
 #include "MemManager.h"
 #include "Foreach.h"
-#include "MemHelp.h"
 #include <memory.h>
+#include "MemGuard.h"
+#include "MemHelp.h"
+#include "TcLog.h"
 
-BOOL addRollBack(RollbackContext* context, RollBackAction action, const RollbackData* data){
+typedef struct OneRollBackContext {
+    RollbackData data;
+    RollBackAction action;
+} OneRollBackContext;
+
+typedef struct RollbackContext {
+    uint32_t num;
+    uint32_t maxNum;
+    OneRollBackContext* contexts;
+    struct RollbackContext* next;
+} RollbackContext;
+
+BOOL addRollBackAction(RollbackContext* context, RollBackAction action, const RollbackData* data){
     if(context->num == context->maxNum) return FALSE;
     context->contexts[context->num].action = action;
 
@@ -24,9 +38,12 @@ BOOL addRollBack(RollbackContext* context, RollBackAction action, const Rollback
 }
 
 void rollback(RollbackContext* context) {
-    FOREACH(OneRollBackContext, ctxt, context->contexts, context->num)
-        ctxt->action(&ctxt->data);
-    FOREACH_END()
+    if(context->num != 0) {
+        LOG_I("start rollback with [%x] rollback action", context->num);
+        FOREACH(OneRollBackContext, ctxt, context->contexts, context->num)
+            ctxt->action(&ctxt->data);
+        FOREACH_END()
+    }
     if(context->next) {
         rollback(context->next);
     }
@@ -63,9 +80,9 @@ void destroyRollbackData(RollbackContext* context) {
     freeTc(context);
 }
 
-void contextMemFree(RollbackData* mem){
-    MemPtr* ptr = (MemPtr*)mem->mem;
-    freeTc(ptr->ptr);
-}
 
+
+void appendRollBackContext(RollbackContext* current, RollbackContext* next){
+    current->next = next;
+}
 

@@ -5,12 +5,12 @@
 #include "BaseType.h"
 #include "FwdDecl.h"
 #include "ActionContext.h"
-#include "RollbackContext.h"
 
 EXTERN_STDC_BEGIN
 
 FWD_DECL(AsynContext);
 FWD_DECL(ActionDesc);
+FWD_DECL(RollbackContext);
 
 typedef struct Context {
   void* data;

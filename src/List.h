@@ -27,7 +27,7 @@ BOOL defaultCompare(const ListNode*, const ListNode*);
 
 ListNode* fetch(BaseList* list, const ListNode* matchNode, CompareFunc compare);
 
-BOOL empty(const BaseList* list);
+BOOL isEmpty(const BaseList* list);
 
 #define DEF_NODE_CONVERT_FUNC(type)\
 static inline struct type* to##type(ListNode* node) {\

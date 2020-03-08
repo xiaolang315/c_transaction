@@ -12,7 +12,7 @@ ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc, const
 #define SYNC_SUB_TRANS(name, actions)\
     ActionDesc name##_actions[] = actions;\
     SUB_TRANS(name){\
-        Transaction trans = TRANSACTION_DEF(name##_actions);\
+        Transaction trans = TRANSACTION_DEF(#name, name##_actions);\
         syncSubTransActionExec(context, NoPrepareChildCtxtFunc, &trans);\
         return ActionOk;\
     }
@@ -20,7 +20,7 @@ ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc, const
 #define SYNC_SUB_TRANS_UP(name, actions)\
     ActionDesc name##_actions[] = actions;\
     SUB_TRANS(name){\
-        Transaction trans = TRANSACTION_DEF(name##_actions);\
+        Transaction trans = TRANSACTION_DEF(#name, name##_actions);\
         return syncSubTransActionExec(context, NoPrepareChildCtxtFunc, &trans);\
     }
 

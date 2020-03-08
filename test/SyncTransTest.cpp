@@ -4,6 +4,7 @@
 #include "SyncTransaction.h"
 #include "Context.h"
 #include "MemManager.h"
+#include "RollbackContext.h"
 
 namespace {
     DEF_ACTION_CTXT(SimpleStruct){
@@ -102,7 +103,7 @@ namespace {
 
     NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
         ROLL_BACK_DATA(RollbackStruct, data, Expect_X)
-        addRollBack(context->rollbackData, RollBackActionDemo, &data);
+        addRollBackAction(context->rollbackData, RollBackActionDemo, &data);
         return ActionOk;
     }
 

@@ -5,6 +5,7 @@
 #include "MemHelp.h"
 #include "BaseType.h"
 #include "Foreach.h"
+#include "MemGuard.h"
 
 typedef struct AsynContextMem {
     struct AsynContext context;
@@ -30,7 +31,7 @@ AsynContext* initAsynContext(ActionDesc* actions, uint32_t actionNum){
     CHECK_PTR_R(runtimeActions, NULL);
 
     RuntimeAction* current = &context->current;
-    FOREACH(ActionDesc, action, actions, actionNum)
+    FOREACH_X(ActionDesc, action IN(actions) LIMITS(actionNum))
         initRuntimeAction(current, action->action, &runtimeActions[ITEM_INDEX(action)]);
         current = current->next;
     FOREACH_END()

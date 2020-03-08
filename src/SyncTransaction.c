@@ -1,7 +1,7 @@
-#include <stddef.h>
 #include "SyncTransaction.h"
 #include "Context.h"
 #include "Foreach.h"
+#include "TcLog.h"
 
 static ActionResult execActions(ActionDesc* actions, uint32_t actionNum, Context* context) {
     FOREACH(ActionDesc, action, actions, actionNum)
@@ -14,6 +14,7 @@ static ActionResult execActions(ActionDesc* actions, uint32_t actionNum, Context
 }
 
 TransResult syncExec(const Transaction* trans){
+    LOG_I("%s is syncExec with [%x] actions.", trans->name, trans->actionNum);
     Context* context = initContext(trans->actions, trans->actionNum);
     if(context == NULL) return TransFail;
 
@@ -26,6 +27,8 @@ TransResult syncExec(const Transaction* trans){
 }
 
 ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc prepare, const Transaction* trans){
+    LOG_I("%s is SubTransActionExec with [%x] actions.", trans->name, trans->actionNum);
+
     Context* context = initContext(trans->actions, trans->actionNum);
     if(context == NULL) return ActionErr;
 

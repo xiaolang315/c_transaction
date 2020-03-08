@@ -18,18 +18,19 @@ typedef enum TransResult {
 }TransResult;
 
 typedef struct Transaction {
+    const char* name;
     ActionDesc* actions;
     uint32_t actionNum;
 } Transaction;
 
-#define TRANSACTION_DEF(actions)\
-  {actions, ARRAY_SIZE(actions)}
+#define TRANSACTION_DEF(name, actions)\
+  {name, actions, ARRAY_SIZE(actions)}
 
 #define ACTIONS(...) {__VA_ARGS__}
 
 #define TRANS(name , actions)\
     ActionDesc name##_actions[] = actions;\
-    Transaction name = TRANSACTION_DEF(name##_actions);
+    Transaction name = TRANSACTION_DEF(#name, name##_actions);
 
 #define SUB_TRANS(name)\
     ActionResult name##func(Context* context);\

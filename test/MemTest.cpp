@@ -5,6 +5,10 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 #include "MemHelp.h"
+#include "MemGuard.h"
+#include "MemGuardRollBack.h"
+
+
 
 TEST_GROUP(MemGuardTest) {
     TEST_SETUP() {

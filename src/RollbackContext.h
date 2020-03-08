@@ -7,6 +7,7 @@
 
 #include "BaseType.h"
 #include "ExternC.h"
+#include "FwdDecl.h"
 
 EXTERN_STDC_BEGIN
 
@@ -17,20 +18,11 @@ typedef struct RollbackData {
 
 typedef void (*RollBackAction)(RollbackData*);
 
-typedef struct OneRollBackContext {
-    RollbackData data;
-    RollBackAction action;
-} OneRollBackContext;
+FWD_DECL(RollbackContext);
 
-typedef struct RollbackContext {
-    uint32_t num;
-    uint32_t maxNum;
-    OneRollBackContext* contexts;
-    struct RollbackContext* next;
-} RollbackContext;
-
-BOOL addRollBack(RollbackContext* , RollBackAction, const RollbackData*);
+BOOL addRollBackAction(RollbackContext* , RollBackAction, const RollbackData*);
 void rollback(RollbackContext*);
+void appendRollBackContext(RollbackContext* current, RollbackContext* next);
 
 RollbackContext* initRollBackCtxt(uint32_t actionNum);
 void destroyRollbackData(RollbackContext*) ;
@@ -39,7 +31,6 @@ void destroyRollbackData(RollbackContext*) ;
 type name##_s = {__VA_ARGS__};\
     RollbackData name = {&name##_s, sizeof(name##_s)};\
 
-void contextMemFree(RollbackData* mem);
 
 EXTERN_STDC_END
 

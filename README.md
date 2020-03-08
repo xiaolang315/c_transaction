@@ -3,12 +3,13 @@
 采用C语言实现的`事务管理`提供顺序执行和回滚的的能力，支持同步事务和异步事务的定义。
 
 ## 待支持的特性：
-* 更完善的测试
+* 更完善的测试,极限测试
 * 内存分配算法指定
 * 文档支持
 * 运行log
 * demo
 * 使用堆内存时，也提供内存泄漏检测。
+* 多平台支持
 
 ## 支持的特性
 * 根据定义action所依赖的struct，自动生成context
@@ -63,7 +64,7 @@
     NULL_CTXT_SYNC_ACTION_DEF(SimpleActionRollbackCheck)(Context* context) {
         RollbackStruct s = {Expect_X};
         RollbackData data = {&s, sizeof(s)};
-        addRollBack(&context->rollbackData, RollBackActionDemo, &data);
+        addRollBackAction(&context->rollbackData, RollBackActionDemo, &data);
         return ActionOk;
     }
 ```

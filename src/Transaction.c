@@ -3,28 +3,26 @@
 //
 
 #include "Transaction.h"
-#include "Foreach.h"
-#include "stdlib.h"
-#include "MemHelp.h"
+#include "RollbackContext.h"
+#include "TcLog.h"
+#include "Cello.h"
 
 ActionResult toActionResult(TransResult ret) {
+    var p0 = $(Float, 0.0);
     switch(ret){
         case TransSucc: return ActionOk;
         case TransFail: return ActionErr;
         case TransContinue: return ActionContinue;
-        default: return ActionUnknown;
+        default:
+            LOG_E("unknown TransResult ");
+            return ActionUnknown;
     }
 }
 
 void upToParent(Context* parent, Context* child) {
-    RollbackContext* next = (RollbackContext*)mallocTc(sizeof(RollbackContext));
-    *next = *child->rollbackData;
-    parent->rollbackData->next = next;
-    child->rollbackData->contexts = NULL;
-    child->rollbackData->num = 0;
-    child->rollbackData->next = NULL;
+    appendRollBackContext(parent->rollbackData, child->rollbackData);
+    child->rollbackData = NULL;
 }
-
 
 void NoPrepareChildCtxtFunc(const Context* parent, Context* child){
     if(child && parent) {
@@ -33,11 +31,13 @@ void NoPrepareChildCtxtFunc(const Context* parent, Context* child){
 }
 
 TransResult onActionSucc(Context* context) {
+    LOG_I("Action Exec Succ");
     destroyContext(context);
     return TransSucc;
 }
 
 TransResult onActionFail(Context* context) {
+    LOG_E("Action Exec Fail");
     rollback(context->rollbackData);
     destroyContext(context);
     return TransFail;

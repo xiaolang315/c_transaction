@@ -2,11 +2,12 @@
 // Created by zhangchao on 2020/2/3.
 //
 #include "Context.h"
-#include "BaseType.h"
 #include "Foreach.h"
 #include "Action.h"
 #include "MemHelp.h"
 #include "AsynContext.h"
+#include "RollbackContext.h"
+#include "MemGuardRollBack.h"
 
 typedef struct ContextSet {
     uint32_t id;
@@ -78,19 +79,15 @@ static void constructContext(Context* context) {
     context->data = NULL;
 }
 
-
-
 void freeAsynContext(RollbackData* data){
     MemPtr* ptr = (MemPtr*)data->mem;
     destroyAsynContext((AsynContext*)ptr->ptr);
 }
 
-
 void freeRollBack(RollbackData* data){
     MemPtr* ptr = (MemPtr*)data->mem;
     destroyRollbackData((RollbackContext*)ptr->ptr);
 }
-
 
 Context* initContext(ActionDesc* actions, uint32_t actionNum) {
     MEM_GUARD_E_R(7, NULL);

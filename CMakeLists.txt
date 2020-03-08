@@ -4,17 +4,19 @@ project(c_transaction)
 
 set(CMAKE_C_COMPILER /usr/bin/gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
-set(CMAKE_CXX_STANDARD 14)
-
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS -fmodules-ts)
 include_directories(
         "/usr/local/include"
     "src/"
+        "log/src"
 )
 
 file(GLOB_RECURSE all_files
 src/*.cpp
 src/*.c
 test/*.cpp
+        log/src/*.c
 )
 
 link_directories(
@@ -22,4 +24,4 @@ link_directories(
 )
 
 add_executable(c_transaction  ${all_files})
-target_link_libraries(c_transaction CppUTest CppUTestExt)
+target_link_libraries(c_transaction CppUTest CppUTestExt Cello)

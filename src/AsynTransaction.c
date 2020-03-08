@@ -3,10 +3,13 @@
 //
 #include "AsynTransaction.h"
 #include "AsynContext.h"
+#include "TcLog.h"
 
 TransResult asynStart(const Transaction* trans, Context** outContext) {
+    LOG_I("%s is start", trans->name);
     Context* context = initContext(trans->actions, trans->actionNum);
     if(context == NULL) {
+        LOG_E("AsynAction initContext fail!");
         return TransFail;
     }
     *outContext = context;
@@ -17,6 +20,7 @@ static TransResult doActions(AsynContext* asynContext, Context* context) {
     do{
         ActionResult ret = asynContext->current.action(context);
         if(ret == ActionErr){
+            LOG_E("AsynAction exec fail!");
             onActionFail(context);
             return TransFail;
         } else if(ret == ActionContinue) {
@@ -52,6 +56,7 @@ TransResult asynActionStart(Context* parentContext, PrepareChildCtxtFunc prepare
     if (subContext == NULL) {
         Context* childContext = initContext(trans->actions, trans->actionNum);
         if(childContext == NULL) {
+            LOG_E("asynActionStart fail because initContext Fail");
             return TransFail;
         }
         prepare(childContext, parentContext);
