@@ -15,7 +15,7 @@ struct AutoCheck {
         useStaticMemory(buff, ARRAY_SIZE(buff));
     }
     ~AutoCheck(){
-        CHECK_EQUAL(NULL, checkMemLeaksPos())
+        CHECK_EQUAL(NULL, checkMemLeaksPos());
         useHeapMemory();
     }
 };

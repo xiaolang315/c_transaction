@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "Util.h"
 #include "BaseType.h"
-#include "FwdDecl.h"
+#include "mcl/fwd_decl.h"
 
 typedef struct Context Context;
 

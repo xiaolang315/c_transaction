@@ -8,7 +8,7 @@
 #include "Transaction.h"
 #include "Context.h"
 
-EXTERN_STDC_BEGIN
+MCL_STDC_BEGIN
 
 TransResult asynStart(const Transaction*, Context**);
 TransResult asynExec(Context*);
@@ -22,6 +22,6 @@ SUB_TRANS(name){\
     return toActionResult(asynActionStart(context, NoPrepareChildCtxtFunc, &trans));\
 }
 
-EXTERN_STDC_END
+MCL_STDC_END
 
 #endif //C_TRANSACTION_ASYNTRANSACTION_H

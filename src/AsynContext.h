@@ -6,9 +6,9 @@
 #define C_TRANSACTION_ASYNCONTEXT_H
 
 #include "Action.h"
-#include "FwdDecl.h"
+#include "mcl/fwd_decl.h"
 
-FWD_DECL(Context);
+MCL_FWD_DECL(Context);
 
 typedef struct RuntimeAction {
     Action action;

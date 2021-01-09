@@ -5,7 +5,7 @@
 #ifndef C_TRANSACTION_ASSERT_H
 #define C_TRANSACTION_ASSERT_H
 
-#include "log.h"
+#include "TcLog.h"
 
 #define RETURN(ret) {return ret;};
 

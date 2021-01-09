@@ -6,10 +6,10 @@
 #define C_TRANSACTION_ROLLBACKCONTEXT_H
 
 #include "BaseType.h"
-#include "ExternC.h"
-#include "FwdDecl.h"
+#include "mcl/stdc.h"
+#include "mcl/fwd_decl.h"
 
-EXTERN_STDC_BEGIN
+MCL_STDC_BEGIN
 
 typedef struct RollbackData {
     void* mem;
@@ -18,7 +18,7 @@ typedef struct RollbackData {
 
 typedef void (*RollBackAction)(RollbackData*);
 
-FWD_DECL(RollbackContext);
+MCL_FWD_DECL(RollbackContext);
 
 BOOL addRollBackAction(RollbackContext* , RollBackAction, const RollbackData*);
 void rollback(RollbackContext*);
@@ -32,6 +32,6 @@ type name##_s = {__VA_ARGS__};\
     RollbackData name = {&name##_s, sizeof(name##_s)};\
 
 
-EXTERN_STDC_END
+MCL_STDC_END
 
 #endif //C_TRANSACTION_ROLLBACKCONTEXT_H

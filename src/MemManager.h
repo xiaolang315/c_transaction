@@ -6,9 +6,9 @@
 #define C_TRANSACTION_GLOBALMEMMANAGER_H
 
 #include "BaseType.h"
-#include "ExternC.h"
+#include "mcl/stdc.h"
 
-EXTERN_STDC_BEGIN
+MCL_STDC_BEGIN
 
 typedef void* (*MallocFunc)(size_t __size);
 typedef void  (*FreeFunc)(void *);
@@ -34,6 +34,6 @@ void* checkMemLeaksPos();
 void* mallocTc(uint32_t);
 void freeTc(void*);
 
-EXTERN_STDC_END
+MCL_STDC_END
 
 #endif //C_TRANSACTION_GLOBALMEMMANAGER_H

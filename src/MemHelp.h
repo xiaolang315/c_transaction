@@ -5,10 +5,10 @@
 #ifndef C_TRANSACTION_MEMHELP_H
 #define C_TRANSACTION_MEMHELP_H
 
-#include "ExternC.h"
+#include "mcl/stdc.h"
 #include "MemManager.h"
 
-EXTERN_STDC_BEGIN
+MCL_STDC_BEGIN
 
 #define STRUCT_ALLOC(type, var)\
 type* var = (type*)mallocTc(sizeof(type));
@@ -19,6 +19,6 @@ var = (type*)mallocTc(sizeof(type) * num)
 #define CHECK_FREE(ptr)\
 if(ptr != NULL) {freeTc(ptr); ptr = NULL;}
 
-EXTERN_STDC_END
+MCL_STDC_END
 
 #endif //C_TRANSACTION_MEMGUARD_H

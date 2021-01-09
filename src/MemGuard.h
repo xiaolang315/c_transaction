@@ -6,9 +6,9 @@
 #define C_TRANSACTION_MEMGUARD_H
 
 #include "BaseType.h"
-#include "ExternC.h"
+#include "mcl/stdc.h"
 
-EXTERN_STDC_BEGIN
+MCL_STDC_BEGIN
 
 /* mem auto release  */
 #define  MEM_GUARD(n);\
@@ -38,6 +38,6 @@ if(ptr == NULL || mem_guard.num >= max) {\
    mem_guard.buff[mem_guard.num++] = ptr;\
 }
 
-EXTERN_STDC_END
+MCL_STDC_END
 
 #endif //C_TRANSACTION_MEMGUARD_H

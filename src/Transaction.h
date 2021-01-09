@@ -7,9 +7,9 @@
 
 #include "Action.h"
 #include "Context.h"
-#include "ExternC.h"
+#include "mcl/stdc.h"
 
-EXTERN_STDC_BEGIN
+MCL_STDC_BEGIN
 
 typedef enum TransResult {
     TransSucc,
@@ -46,6 +46,6 @@ void upToParent(Context* parent, Context* child);
 typedef void (*PrepareChildCtxtFunc)(const Context* parent, Context* child);
 void NoPrepareChildCtxtFunc(const Context* parent, Context* child);
 
-EXTERN_STDC_END
+MCL_STDC_END
 
 #endif //C_TRANSACTION_TRANSACTION_H

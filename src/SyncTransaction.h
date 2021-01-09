@@ -4,7 +4,7 @@
 
 #include "Transaction.h"
 
-EXTERN_STDC_BEGIN
+MCL_STDC_BEGIN
 
 TransResult syncExec(const Transaction* trans);
 ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc, const Transaction* trans);
@@ -25,6 +25,6 @@ ActionResult syncSubTransActionExec(Context* parent, PrepareChildCtxtFunc, const
     }
 
 
-EXTERN_STDC_END
+MCL_STDC_END
 
 #endif // __TRANSACTION_H_

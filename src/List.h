@@ -6,9 +6,9 @@
 #define C_TRANSACTION_LIST_H
 
 #include "BaseType.h"
-#include "ExternC.h"
+#include "mcl/stdc.h"
 
-EXTERN_STDC_BEGIN
+MCL_STDC_BEGIN
 
 typedef struct ListNode {
     struct ListNode* next;
@@ -44,6 +44,6 @@ typedef struct name{\
 
 #define DEF_NODE_END(name)\
 } name;
-EXTERN_STDC_END
+MCL_STDC_END
 
 #endif //C_TRANSACTION_LIST_H
