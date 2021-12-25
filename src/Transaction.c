@@ -5,10 +5,8 @@
 #include "Transaction.h"
 #include "RollbackContext.h"
 #include "TcLog.h"
-#include "Cello.h"
 
 ActionResult toActionResult(TransResult ret) {
-    var p0 = $(Float, 0.0);
     switch(ret){
         case TransSucc: return ActionOk;
         case TransFail: return ActionErr;

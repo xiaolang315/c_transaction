@@ -1,9 +1,14 @@
-#include "CppUTest/TestHarness.h"
-#include "CppUTestExt/MockSupport.h"
-#include "Context.h"
 #include "AsynTransaction.h"
 #include "MemManager.h"
 #include "RollbackContext.h"
+#include "Context.h"
+#include "CppUTest/CommandLineTestRunner.h"
+#include "CppUTest/TestPlugin.h"
+#include "CppUTest/TestRegistry.h"
+#include "CppUTestExt/MockSupportPlugin.h"
+#include "CppUTest/TestHarness.h"
+#include "CppUTestExt/MockSupport.h"
+#include "CppUTestExt/MockSupport_c.h"
 
 DEF_ACTION_CTXT(Simple1) {
     int x;

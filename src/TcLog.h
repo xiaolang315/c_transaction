@@ -5,13 +5,13 @@
 #ifndef C_TRANSACTION_TCLOG_H
 #define C_TRANSACTION_TCLOG_H
 
+#include "mcl/log/log.h"
 #include "mcl/stdc.h"
-#include "mcl/log.h"
 
 MCL_STDC_BEGIN
 
-#define LOG_I(...) MCL_INFO( __VA_ARGS__)
-#define LOG_E(...) MCL_ERR( __VA_ARGS__)
+#define LOG_I(...) MCL_LOG_INFO( __VA_ARGS__)
+#define LOG_E(...) MCL_LOG_ERR( __VA_ARGS__)
 
 MCL_STDC_END
 

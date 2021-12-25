@@ -1,16 +1,16 @@
-#ifndef __CONTEXT_H_
-#define __CONTEXT_H_
+#ifndef F0C97A87_F9E1_4866_85C8_E8468F4E79A5
+#define F0C97A87_F9E1_4866_85C8_E8468F4E79A5
 
 #include "mcl/stdc.h"
 #include "BaseType.h"
-#include "mcl/fwd_decl.h"
+#include "mcl/typedef.h"
 #include "ActionContext.h"
 
 MCL_STDC_BEGIN
 
-MCL_FWD_DECL(AsynContext);
-MCL_FWD_DECL(ActionDesc);
-MCL_FWD_DECL(RollbackContext);
+MCL_TYPE_DECL(AsynContext);
+MCL_TYPE_DECL(ActionDesc);
+MCL_TYPE_DECL(RollbackContext);
 
 typedef struct Context {
   void* data;
@@ -28,4 +28,4 @@ void destroyContext(Context* context) ;
 
 MCL_STDC_END
 
-#endif // __CONTEXT_H_
+#endif /* F0C97A87_F9E1_4866_85C8_E8468F4E79A5 */

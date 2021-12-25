@@ -2,8 +2,8 @@
 // Created by zhangchao on 2020/2/11.
 //
 
-#ifndef C_TRANSACTION_MEMHELP_H
-#define C_TRANSACTION_MEMHELP_H
+#ifndef A0B2B553_0ECE_4051_86E7_17BE0A343B53
+#define A0B2B553_0ECE_4051_86E7_17BE0A343B53
 
 #include "mcl/stdc.h"
 #include "MemManager.h"
@@ -21,4 +21,4 @@ if(ptr != NULL) {freeTc(ptr); ptr = NULL;}
 
 MCL_STDC_END
 
-#endif //C_TRANSACTION_MEMGUARD_H
+#endif /* A0B2B553_0ECE_4051_86E7_17BE0A343B53 */

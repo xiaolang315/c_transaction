@@ -7,7 +7,7 @@
 
 #include "BaseType.h"
 #include "mcl/stdc.h"
-#include "mcl/fwd_decl.h"
+#include "mcl/typedef.h"
 
 MCL_STDC_BEGIN
 
@@ -18,7 +18,7 @@ typedef struct RollbackData {
 
 typedef void (*RollBackAction)(RollbackData*);
 
-MCL_FWD_DECL(RollbackContext);
+MCL_TYPE_DECL(RollbackContext);
 
 BOOL addRollBackAction(RollbackContext* , RollBackAction, const RollbackData*);
 void rollback(RollbackContext*);

@@ -5,9 +5,9 @@
 #ifndef C_TRANSACTION_STATICMEMALGO_H
 #define C_TRANSACTION_STATICMEMALGO_H
 
-#include "mcl/fwd_decl.h"
+#include "mcl/typedef.h"
 
-MCL_FWD_DECL(MemAllocAlgo);
+MCL_TYPE_DECL(MemAllocAlgo);
 const MemAllocAlgo* staticMemAlgo();
 
 #endif //C_TRANSACTION_STATICMEMALGO_H
